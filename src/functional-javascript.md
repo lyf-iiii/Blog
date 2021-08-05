@@ -1,3 +1,4 @@
+# functional-js
 ## Hello world
 - task 
   - Write a function that takes an input string and returns it uppercased.

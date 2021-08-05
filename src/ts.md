@@ -1,4 +1,4 @@
-# TypeScript
+# TypeScript 学习
   - 任何变量都声明类型
   - 不到万不得已不要用any
   - 给你的对象声明接口
