@@ -1,4 +1,4 @@
-# functional-js
+# Js 函数式编程
 ## Hello world
 - task 
   - Write a function that takes an input string and returns it uppercased.
