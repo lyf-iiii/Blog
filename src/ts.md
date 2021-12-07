@@ -18,6 +18,7 @@ document.body.innerHTML = area("rectangle", 30, 15);
 ```
 
 ## interface
+  - 声明一个对象类型推荐只用接口
   - 接口作为一个类型批注
   - 如果接口中设置的参数缺失会报错
 ```javascript
@@ -160,6 +161,7 @@ console.log(num);
   - 全局作用域 
   - 类作用域 变量声明在一个类当中 可以通过类对访问 类变量也可以是静态的，静态的变量可以通过类名直接访问
   - 局部作用域 - 局部变量 局部变量只能在声明它的一个代码块中使用
+  
 ```javascript
 var global_num = 12          // 全局变量
 class Numbers { 
@@ -179,3 +181,450 @@ console.log("实例变量: "+obj.num_val)
 - 编译待编译文件 定义编译选项
 ## 如何配置typescript编译器
 - vscode在项目中写配置文件
+## typescript 的 数据类型 
+  - any
+    - 可以被任何数据类型赋值 也可以赋值给任何数据类型
+  - unknown
+    - 可以被任意数据类型复制 但是只可赋值给any和unknown
+  - void
+    - 当一个函数没有返回值的时候 可以设置void类型
+  - naver
+    - 可以用来监督函数是否对可接收的数据类型做处理
+  ```js
+    function gandleMessage(message:string|number|boolean){
+      switch(typeof message){
+        case 'string':
+          console.log("string处理方式处理message“)
+          break
+        case ‘number’:
+          console.log("number处理方式处理message“)
+          break
+        case 'boolean':
+          console.log("boolean处理方式处理message“)
+          break
+        default:
+          const check:never = message
+      }
+    }
+  ```
+  - tuple
+    - 元组类型
+  ```js
+  // tuple 的应用场景
+  // react hook useState
+  // const [couter, setCounter] = useState(10)
+    function useState(state:any){
+      let currentState = state
+      
+      const changeState = (newState : any)=>{
+        currentState = newState
+      }
+
+      const tuple:[any,(newState:any)=>void] = [currentState,changeState]
+
+      return tuple
+    }
+
+    const [counter, setCounter] = useState(10)
+    setCounter(1000)
+
+    const [title,setTitle] = useState('abc')
+  // 优化 加泛型
+    function useStateB<T>(state:T){
+      let currentState = state
+      
+      const changeState = (newState : T)=>{
+        currentState = newState
+      }
+
+      const tuple:[T,(newState:T)=>void] = [currentState,changeState]
+
+      return tuple
+    }
+
+    const [counter, setCounter] = useState(10)
+    setCounter(1000)
+
+    const [title,setTitle] = useState('abc')
+```
+
+## 对象类型
+
+```js
+// point 是行参
+function printPoint(point:{x:number,y:number}){
+  console.log(point.x)
+  console.log(point.y)
+}
+printPoint({x:123,y:123}) // 里面的对象是个实参
+
+// 可选类型
+function printPoint(point:{x:number,y:number,z?:number}){ //z加了？之后是一个可选类型
+  console.log(point.x)  
+  console.log(point.y)
+}
+printPoint({x:123,y:123}) // 里面的对象是个实参
+printPoint({x:123,y:123,z:123}) // 里面的对象是个实参
+```
+## 联合类型
+```js
+// number|string 就是一个联合类型
+function printID(id:number|string){
+  // 使用联合类型的值时 需要特别的小心
+  // narrow L：缩小
+  if(typeof id === 'string'){
+    // TypeSvript 帮助确定id 一定是string 类型
+    console.log(id.toUpperCase())
+  }else{
+    console.log(id)
+  }
+}
+```
+## 类型别名
+  - type ID = number | String
+## 类型断言
+  - 通过类型断言把普遍点的类型变成一个具体类型
+```js
+
+// 断言1
+const el =  document.getElementById('why') // 此时el的类型为htmlElement
+el.src = "url地址" // 此时el不具备htmlImageElement这个类型的属性src 所以会报错
+
+const el = document.getElementById('why') as htmlImageElement // 此时el的类型因为类型断言变成了一个具体的类型 htmlImageElement
+
+// ---------------------------
+
+// 断言2
+class Person{
+
+}
+
+class Student extends Person{
+  studying(){}
+}
+
+function sayHello(p:Person){
+  // p.studying() 报错 因为Person类中没有stuudying方法
+  (p as Student).studying() // 类型断言之后 转化了类型
+}
+
+const stu = new Student()
+sayHello(stu)
+
+// ----------------------------
+
+// 断言3
+const message = "Hello World"
+// const num:number = (message as unknown) as number 容易造成类型混乱
+
+```
+
+## 非空类型断言
+```js
+function printMessageLength(message?:string){
+  // if(message){
+    // console.log(message.length)
+  // }
+  console.log(message!.length) // ! 表示message 一定有值
+}
+
+printMessageLength('aaa')
+printMessageLength('hello world')
+```
+## 可选链 属于ecmascript 2020 不是属于typescript
+```js
+  type Person = {
+    name:String
+    friend:{
+      name:String
+      age?:number
+    }
+  }
+
+  const info:Person = {
+    name:'why'
+  }
+
+  // 另一个文件中
+  console.log(this.info.name) // 可能会报错
+  console.log(this.info?.name) // 变成一个可选链
+```
+
+## !!运算符
+  - 将js 基础类型变成布尔值
+
+## ??运算符
+  - 当某个值为null 给一个默认值
+
+## 字面量类型
+```js
+  const message:'Hello World' = 'Hello World'
+  let num:123 = 123
+  // num = 321 会报错
+
+  // 字面量类型的意义 就是必须结合联合类型
+  type Alignment = 'left' | 'right' | 'center'
+
+  let align : Alignment = 'left'
+  align = 'right'
+  align = 'center'
+
+```
+
+## 字面量推理
+```js
+ type Method = 'GET' | 'POST'
+ function request(url:string,method:Method){}
+
+ type Request = {
+   url:string,
+   method:Method
+ }
+
+ const options:Request = {
+   url:"http://www.coderwhy.org/abc",
+   method:"POST" // 如果options不使用Request 那么传入的method 会被推理为String类型 这样不符合Method类型 会 报错
+ }
+
+ request(options.url,options.method) // 或者给传入options.method 加上 as Method 的类型断言
+ export {}
+```
+
+## 函数类型
+```js
+function calc(n1:number,n2:number,fn:(num1:number,num2:number)=>{
+  return fn(n1,n2)
+})
+
+calc(20,30, function(a1,a2){
+  return a1+a2
+})
+
+calc(20,30,function(a1,a2){
+  return a1*a2
+})
+```
+
+## 函数的重载
+ - 含义：函数的名称相同，但是参数不同的几个函数，就是函数的重载
+```js
+  // 实现方式一：联合类型
+    function getLength(args:string | any[]){
+      return args.length
+    }
+    console.log(getLength("abc"))
+    console.log(getLength([123,321,123]))
+
+    // 实现方式二：函数的重载
+    function getLength(args:string):number
+    function getLength(args:any[]):number
+
+    function getLength(args:any):number{
+      return args.length
+    }
+```
+
+## 类
+```js
+class Person {
+  name:string
+  age:number
+  
+  constructor(name:string,age:number){
+    this.name = name
+    this.age = age
+  }
+
+  eating(){
+    console.log('eating')
+  }
+}
+class Student extends Person{
+  sno:string
+
+  constructor(sno:string){
+    super() // 相当于调用了父类的constructor
+    this.sno = sno
+  }
+
+  studying(){
+    console.log('studying')
+  }
+}
+```
+
+## 类的多态
+```js
+  class Animal{
+    action(){
+      console.log('animal action')
+    }
+  }
+
+  class Dog extends Animal{
+    action(){
+      console.log('dog running!')
+    }
+  }
+
+  class Fish extends Animal {
+    action(){
+      console.log("fish swimming")
+    }
+  }
+
+  function makeActions(animals:Animal[]){
+    animals.forEach(animal => {
+      // 此时传进来的对象会调用子类的action 
+      // 父类引用指向子类对象
+      // const animal1:Animal = new Dog()
+      // 每次调用父类但是新建了一个子类的实例来去调用的这个过程 叫做多态
+      animal.action() 
+    })
+  }
+
+  makeActions([new Dog(),new Fish()])
+```
+
+## 类修饰符
+  - privated 私有的 在类的内部可以访问 外界无法访问
+  - protected 在类内部和子类中可以访问
+```js
+  class Person{
+    protected name:string = '123'
+  }
+
+  class Student extends Person{
+    getName(){
+      return this.name
+    }
+  }
+
+  const stu = new Student()
+  consle.log(stu.getName())
+```
+
+## setter/getter 访问器
+```js
+class Person {
+  private _name:string
+
+  constructor(name:string){
+    this._name = name
+  }
+
+  // 访问器setter/getter
+  // setter
+  set name(newName){
+    this._name = newName
+  }
+  // getter 访问器
+  get name() {
+    return this._name
+  }
+}
+
+const p = new Person("why")
+p.name = "coderlyf"
+console.log(p.name) 
+```
+
+## 类的静态成员
+- 访问属性或者方法的时候可以不通过对象实例 直接通过 对象.属性 对象.方法 来访问
+```js
+class Student {
+  static time:string = "20:00"
+
+  static attendClass(){
+    console.log("去学习～")
+  }
+}
+
+console.log(Student.time)
+Student.attendClass()
+```
+
+## 抽象类abstract
+- 抽象函数必须存放在抽象类中 抽象类实例化会报错 因为抽象类不可以被实例化
+- 抽象函数可以没有实现体 例如 
+- 抽象类当中的抽象方法 必须要被子类实现
+- 抽象类的方法 如果有实现体 那么可以不加 abstract
+```js
+class Shape {
+  abstract getArea()
+}
+```
+```js
+function makeArea(shape:Shape){
+  return shape.getArea()
+}
+abstract class Shape{
+  abstract getArea()
+}
+class Rectangle extends Shape{
+  private width:number
+  private height:number
+
+  constructor(width:number,height:number){
+    super()
+    this.width = width
+    this.height = height
+  }
+
+  getArea(){
+    return this.width *this.height
+  }
+}
+
+class Circle extends Shape{
+  private r:number 
+
+  constructor(r:number){
+    super()
+    return this.r = r
+  }
+
+  getArea(){
+    return this.r*this.r*3.14
+  }
+}
+```
+
+## 类的类型
+```js
+class Persom {
+  name:String = "123"
+  eating(){}
+}
+
+const p = new Person()
+
+const p1 : Person = {
+  name: "why",
+  eating(){
+
+  }
+}
+
+function printPerson(p:Person){
+  console.log(p.name)
+}
+
+printPerson(new Person())
+printPerson({name:"kobe",eating:function(){}})
+```
+
+## 索引类型
+```js
+// 定义一个索引类型的接口
+interface IndexLanguage {
+  [index:number]:string
+}
+const frontLanguage:IndexLanguage = {
+  0:"html",
+  1:"css",
+  2:"js",
+  3:"vue",\
+  // "abd":"dbc" // 报错
+}
+```

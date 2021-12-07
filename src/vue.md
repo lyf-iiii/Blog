@@ -212,7 +212,53 @@ class Watcher {
 
 - /user/:id
 - $route.params.变量名
+- 当动态路由的动态参数切换时 实际上路由已经发生改变但是组件并没有重新加载所以需要使用watch监听$route的变化 或者用beforeRouteUpdate 监听
+## 使用元信息控制路由访问权限
+- 给路由添加meta属性
+```js
+router.beforeEach((to,from,next)=>{
+  if(to.meta.requiredLogin && !store.state.user.isLogin){ // 未登录且必须登录才能访问的耶main 跳转到登录页面
+    next({name:'Login'})
+  }else if(to.meta.redirectAlreadyLogin && store.state.user.isLogin){ // 已经登录访问登录页面跳转首页
+    next('/')
+  }else{
+    next()
+  }
+})
+```
+## router addRoute动态鉴权
+- 在vuex里保存一个状态 isLogin：false
+```js
+// router.js
+export const asyncRoutes = [
+  {
+    path:'/dashboard',
+    component:Dashboard
+  }
+]
+// 组件中
 
+```
+## router 的滚动行为
+```js
+const router = new VueRouter({
+  mode:'history',
+  routes,
+  scrollBehavior(to,from,savedPosition){
+    if(savedPosition){
+      console.log(savedPosition)
+      return savedPosotion
+    }else{
+      const position = {}
+      position.selector = to.hash
+      if(to.hash === '#nav'){
+        position.offset = { y:110 }
+      }
+      return position
+    }
+  }
+})
+```
 ## vue-router 有哪几种导航钩子?
 
 - beforeEach 前置守卫
@@ -253,6 +299,9 @@ class Watcher {
 
 - this.$emit('事件名‘)
 
+## 兄弟组件中传递参数
+- event Bus
+- 两个组件分别import main.js当中的{eventBus} 进行`$emit` 订阅 `$on` 发布
 ## 如何让 CSS 只在当前组件中起作用
 
 - 当前组件`<style>`写成`<style scoped>`
@@ -260,6 +309,7 @@ class Watcher {
 ## `<keep-alive></keep-alive>`的作用是什么?
 
 - 比如有一个列表和一个详情，那么用户就会经常执行打开详情=>返回列表=>打开详情…这样的话列表和详情都是一个频率很高的页面，那么就可以对列表组件使用<keep-alive></keep-alive>进行缓存，这样用户每次返回列表的时候，都能从缓存中快速渲染，而不是重新渲染
+- 被keep-alive 包裹的组件 再次进入会进入到activied钩子函数 不会再次触发created
 
 ## 如何获取 dom
 
