@@ -628,3 +628,20 @@ const frontLanguage:IndexLanguage = {
   // "abd":"dbc" // 报错
 }
 ```
+## 泛型
+
+- 传入一个 T 来做类型参数 根据 ts 的类型推导传入的参数是什么类型
+
+```js
+// 使用泛型
+function loggingIdentity<T>(arg: T) {
+  console.log(arg.length) // 如果传入的参数是个number类型 那么就不具备length属性 就会报错
+  return arg
+}
+// 使用泛型变量  如果我们想操作的是T类型的数组 那么我们
+function loggingIdentity<T>(arg: T[]):T[] {
+  console.log(arg.length)
+  return arg
+}
+
+```
