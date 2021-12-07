@@ -638,10 +638,33 @@ function loggingIdentity<T>(arg: T) {
   console.log(arg.length) // 如果传入的参数是个number类型 那么就不具备length属性 就会报错
   return arg
 }
+
 // 使用泛型变量  如果我们想操作的是T类型的数组 那么我们
 function loggingIdentity<T>(arg: T[]):T[] {
   console.log(arg.length)
   return arg
 }
 
+// 泛型类型
+fuction identity<T>(arg:T):T{ //创建一个泛型函数
+  return arg
+}
+
+let myIdentity:<T>(arg:T) => T = identity // 箭头方式创建一个泛型函数
+
+let myIdentity:{<T>(arg:T):T} = identity // 带有调用签名的对象字面量来定义泛型函数
+
+// 创建一个泛型接口
+interface GenericIdentityFn {
+  <T>(arg:T):T
+}
+
+function identity<T>(arg:T):T{
+  return arg
+}
+
+let myIdentity: GenericIdentityFn = identity
+// ------------------------------------- 
+
 ```
+
