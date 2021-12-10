@@ -628,3 +628,167 @@ const frontLanguage:IndexLanguage = {
   // "abd":"dbc" // 报错
 }
 ```
+## 接口的继承
+```js
+  interface ISwin {
+    swimming:()=> void
+  }
+
+  interface IFly {
+    flying:()=> void
+  }
+
+  interface IAction extends ISwim,IFly {
+
+  }
+
+  const action:IAction = {
+    swimming(){
+
+    },
+    fiying(){}
+  }
+
+```
+
+## 交叉类型
+```js
+// 一种组合类型的方式：联合类型
+type WhyType = number | string
+type Direction = "left" | "right" | "center"
+
+// 另一种组建类型的方式：交叉类型
+type WType = number & string
+
+interface ISwim {
+  swimming:() => void
+}
+
+interface IFly {
+  flying:() => void
+}
+
+type MyType1 = ISwim | IFly
+type MyType2 = ISwim & IFly
+```
+
+## 接口的实现
+```js
+  interface ISwim {
+    swimming:()=> void
+  }
+
+  interface IEat {
+    eating :()=>void
+  }
+
+  const a:ISwim = {
+    swmming(){
+
+    }
+  }
+
+  // 类实现接口
+  class Animal {
+
+  }
+
+  // 继承： 只能实现单继承
+  // 实现：实现接口，类可以实现多个接口
+  class Fish extends Animal implements ISwim,IEat{
+    swimming(){
+      console.log("Fish Swimming")
+    }
+
+    eating(){
+      console.log("Fish Eating")
+    }
+  }
+
+  class Person implements ISwim{
+    swimming(){
+      console.log("Person swimming")
+    }
+  }
+
+  // 编写一些公共的API：面向接口编程
+  function swimAction（swimable:ISwim){
+    swimable.swimming()
+  }
+
+  // 1.所有实现了接口的类对应的对象，都是可以传入
+  swimAction(new Fish())
+  swimAction(new Person())
+```
+## 接口的合并
+
+```js
+interface IFoo {
+  name:string
+}
+
+interface IFoo{
+  age:number
+}
+
+const foo : IFoo = {
+  name :"why",
+  age:18
+}
+```
+
+## type 和 interface 的区别
+- type 是不可以重复定义的 但是interface是可以的而且相同的接口会合并
+
+## 字面量赋值
+```js
+  interface IPerson {
+    name:String,
+    age:number,
+    height:number
+  }
+
+ // const p:IPerson = {
+   // name:'why',
+   // age:18,
+   // height:'1.88',
+   // address:"广州市"
+ // } 会报错因为IPerson 里面 没有 address属性
+
+ const info = {
+   name:'why',
+   age:18,
+   height:1.88,
+   address:"广州市"
+ }
+ // freshness擦除
+ const p : IPerson = info 
+```
+
+## 枚举的类型
+```js
+enum Direction {
+  LEFT = 'LEFT',
+  RIGHT = 'RIGHT',
+  TOP = 'TOP',
+  BOTTOM = 'BOTTOM',
+}
+
+function turnDirention(direction:Direction){
+  console.log(direction)
+  switch(direction){
+    case Direction.LEFT:
+      console.log("改变角色的方向向左")
+      break
+    case Direction.RIGHT:
+      console.log("改变角色的方向向右")
+      break
+    case Direction.TOP:
+      console.log("改变角色的方向向上")
+      break
+    case Direction.BOTTOM:
+      console.log("改变角色的方向向下")
+      break
+  }
+}
+```
