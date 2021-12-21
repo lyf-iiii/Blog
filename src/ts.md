@@ -795,6 +795,7 @@ function turnDirention(direction:Direction){
 ## 泛型
 
 - 传入一个 T 来做类型参数 根据 ts 的类型推导传入的参数是什么类型
+- 泛型 实际上就是将类型参数化
 
 ```js
 // 使用泛型
@@ -831,3 +832,52 @@ let myIdentity: GenericIdentityFn = identity
 // ------------------------------------- 
 
 ```
+## 泛型接口
+```js
+interface IPerson <T1 = string ,T2 = number> {
+  name:T1,
+  age:T2
+}
+
+const p:IPerson = {
+  name:"why",
+  age:18
+}
+```
+
+## 泛型类
+```js
+class Point<T>{
+  x:T,
+  y:T,
+  z:T,
+
+  constructor(x:T,y:T,z:T){
+    this.x = x
+    this.y = y
+    this.z = z
+  }
+}
+```
+
+## 泛型的类型限制
+```js
+interface ILength {
+  length:number
+} 
+
+function getLength<T exrends ILength>(arg:T){
+  return arg.length
+}
+
+getLength("abe")
+getLength(["abc","cba"])
+getLength({length:100})
+```
+
+## xx.d.ts
+- 这种文件是生命文件
+- axios 直接引入就可以找到axios对象使用 是因为 nodes_modules中的axios里有index.s.ts文件
+- 但是lodash引入之后会报错 
+  - 解决1: npm install @types/lodash -D
+  - 解决2: 手动在项目里面编写 xx.d.ts文件
