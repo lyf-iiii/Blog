@@ -5,6 +5,8 @@
 ## 什么是TyprScript
   - TypeScript是一种微软开发的自由和开源的编程语言，它是javaScript的一个超集，扩展了javascript的语法
   - 在编译时进行类型检测
+  - ts 始于js又归于js 
+    - 1.编译检查语法错误 2.转换成es6或者es5之类的
 ## tsc 命令
   - 把ts文件编译译成js文件
 ## 类型批注
@@ -177,8 +179,25 @@ console.log(Numbers.sval)   // 静态变量
 var obj = new Numbers(); 
 console.log("实例变量: "+obj.num_val)
 ```
-## tsconfig.json 的作用
+## tsconfig.json的作用
 - 编译待编译文件 定义编译选项
+## tsconfig.json的配置
+- comppilerOptions 编译选项
+  - target 目标代码
+  - module 模块化方案 （commonjs require/module.exports/es module import /export）
+  - strict 严格的语法检查 比如会检查出any
+  - jsx 对jsx进行怎样的处理 转化为h函数 或者createElement也可以不转化 （perserve）
+  - importHelpers 辅助导入功能
+  - moduleResolution 按照node的方式去解析模块 import './index.node'
+  - skipLibCheck  跳过一些库（axios，loadsh）的类型检测 
+  - esModuleInterop allowSyntheticDefaultImports 控制export default/module。exports能不能一起使用 也就是es module 和 commonjs能不能一起使用
+  - sourceMap 要不要生成映射文件 ts -> js
+  - baseUrl 文件路径在解析的时候 基本url 默认基于当前文件
+  - types 指定具体要解析使用的类型
+  - paths 路径解析 '@/*'：['/src/*']
+  - lib 可以指定在项目中可以使用哪些库的类型
+- include 哪些ts代码需要编译解析
+- exclude 哪些模块不需要解析 一般 node_modules 里面的库不需要解析
 ## 如何配置typescript编译器
 - vscode在项目中写配置文件
 ## typescript 的 数据类型 

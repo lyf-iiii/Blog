@@ -847,3 +847,10 @@ export default {
 - addFormat 自定义校验规范
 ## 在不实用proxy的前提下 实现defineProperty可以新增数据
   - 将被遍历的数据的长度设置成1000 
+
+## vue3 业务开发
+- 配置好架构
+- 样式初始化 normalize.css
+  - npm install --save normalize.css
+- 
+
