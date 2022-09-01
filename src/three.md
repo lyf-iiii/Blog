@@ -2,17 +2,52 @@
 
 ## 创建一个场景
 
-- 场景
+### 场景
 
 ```javascript
 var scene = new THREE.Scene();
 ```
 
-- 相机
-  - 正投影摄像机 OrthographicCamera
-  - PersoectiveCamera （透视摄像机）
-  - 正投影摄像机在什么角度看缩放都是一样的
-  - 透视摄像机 可以变化缩放
+#### 属性
+
+- fog（雾化）：雾化效果是：场景中的物体离摄像机越远就会变得越模糊
+- overrideMaterial（材质覆盖）
+
+#### 方法
+
+- THREE.Scene.Add：用于向场景中添加对象
+- THREE.Scene.Remove：用于移除场景中的对象
+- THREE.Scene.children：用于获取场景中所有的子对象列表
+- THREE.Scene.getObjectByName：利用 name 属性，用于获取场景中特定的对象
+- THREE.Scene.traverse(Fn) ：传入一个函数 会在 scene 对象深度遍历每一个子对象上运行
+
+### 几何体
+
+- THREE.CylinderGeometry(1, 4, 4): 三围圆柱
+- THREE.BoxGeometry(2, 2, 2)：基本立方体
+- THREE.SphereGeometry(2)：基本领域
+- THREE.IcosahedronGeometry(4)：二十面缓冲几何体
+- THREE.ConvexGeometry(points：array)：凸面体
+- THREE.LatheGeometry(pts, 12)： 扫描几何体
+- THREE.OctahedronGeometry(3)：八面体
+- THREE.ParametricGeometry：根据公式创建几何体
+- THREE.TetrahedronGeometry(3)：四面缓冲几何体
+- THREE.TorusGeometry(3, 1, 10, 10)：三围圆环
+- THREE.TorusKnotGeometry(3, 0.5, 50, 20)：三围环面纽结
+
+### 几何体的属性
+
+- scale 沿着指定轴缩放
+- position 空间定位
+- rotation 沿着指定轴旋转
+- translate 沿着制定轴平移
+
+## 相机
+
+- 正投影摄像机 OrthographicCamera ：正交投影摄像机 每个方格是一样大的 常用于二维游戏 模拟城市 文明
+- PersoectiveCamera （透视摄像机）：本书示例常用摄像机 更加贴近真实
+- 正投影摄像机在什么角度看缩放都是一样的
+- 透视摄像机 可以变化缩放
 
 ```javascript
 var camera = new THREE.PerspectiveCamera(
@@ -44,9 +79,17 @@ camera.position.z = 5;
     - 如果你希望保持你的应用程序的尺寸，但是以较低的分辨率来渲染，你可以在调用setSize时，给updateStyle（第三个参数）传入false
 
 - 立方体 BoxGeometry
+
   - CubeGeometry(width, height, depth, segmentsWidth, segmentsHeight, segmentsDepth, materials, sides)
-- 材质 MeshBasicMaterial
+
+- 材质
+
+  基础材质 MeshBasicMaterial
+
+  网格材质 MeshLambertMaterial
+
 - 网格 Mesh
+
 - 渲染场景
   - 进行`渲染`或者`动画循环`
   - requestAnimationFrame 用户切换到其他的标签页的时候会暂停，因此不会浪费用户的处理器资源
@@ -148,10 +191,24 @@ function initTween() {
 - THREE.Light(hex)
   - hex 接收一个 16 进制的颜色值
 
-### 派生光源
+### 基础光源
 
-- AmbientLight 环境光
-- AreaLight 区域光
-- DirectionalLight 方向光
-- SpotLight 聚光灯
-- PointLight 点光源
+- AmbientLight 环境光：颜色会叠加到场景现有物体的颜色上
+
+- PointLight 点光源：从空间的一点向所有方向发射光线，点光源不能用来创建阴影
+
+- SpotLight 聚光灯：有聚光的效果，类似台灯天花板上的吊灯或者手电筒，这种光源可以投射阴影
+
+  - ![image-20220811231933530](/Users/lianyafeng/Library/Application Support/typora-user-images/image-20220811231933530.png)
+
+- DirectionalLight 方向光：也称为无限光，发出的光线可以看作是平行的，例如太阳光，可以创建阴影
+
+  ![image-20220811230217359](/Users/lianyafeng/Library/Application Support/typora-user-images/image-20220811230217359.png)
+
+### 特殊光源
+
+- AreaLight 区域光：可以指定散发光线的平面，而不是一个点，不投射阴影
+- LensFlare：不是光源，但是可以为光源添加镜头光晕效果
+- HemisphereLight ：特殊光源 可以通过模拟反光面和光线微弱的天空来创建更加自然的室外光线， 不提供阴影
+
+## 材质

@@ -1,4 +1,4 @@
-vue.js 深入浅出
+# vue.js 深入浅出
 
 ## vue 简介
 
@@ -14,7 +14,7 @@ vue.js 深入浅出
 
   - 虚拟 dom 进行比对的最少单位是 组件 而不是某一个 dom 节点
 
-## 第二章 Object 的变化侦测
+## 第二章 Object 的变化侦测 /core/observer/
 
 - **_变化侦测_**：侦测数据的变化 当数据变化时 会通知视图进行相应的更新
   - 推 push
@@ -57,11 +57,15 @@ vue.js 深入浅出
 ![guanxitu](./img/guanxitu.png)
 
 - Data 通过 Observer 转换成了 getter/setter 的形式来追踪变化
+  - defineProperty 里面的 get/set
 - 当外界通过 watcher 读取数据的时，会触发 getter 从而将 watcher 添加到依赖中
+  - 触发 defineProperty 里的 get 触发 dep.addSub() dep 收集依赖
 - 当数据发生了变化时，会触发 setter，从而向 Dep 中的依赖（Watcher）发送通知
+  - 触发 defineProperty 里的 set 触发 dep.notice() dep 通知 watcher
 - Watcher 接收到通知后，会向外界发送通知，变化通知到外界后可能会触发视图更新，也有可能触发用户的某个回调函数等。
+  - dep.notice() 里面触发 watcher 的 update 方法 然后出发 run 方法
 
-## 第三章 Array 的变化侦测
+## 第三章 Array 的变化侦测 /core/observer
 
 - push 改变数组不会触发 getter/setter 原因是我们可以通过 Array 原型上的方法来改变数组的内容，所以 Object 那种通过 getter/setter 的实现方式就行不通了
 
@@ -76,22 +80,21 @@ vue.js 深入浅出
 - 当使用原型方法对时候 实际上是触发了`mutator`函数 在里面执行原型方法 然后原型方法触发的时候我们可以发送变化通知
 
 ```js
-const arratProto = Array.prototype;
-export const arrayMethods = Object.create(arrayProto)
-[('push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reserve')].forEach(
-  function (method) {
-    // 缓存原始方法
-    const original = arratProto[method];
-    Object.defineProperty(arrayMethods, method, {
-      value: function mutator(...args) {
-        return original.apply(this, args);
-      },
-      enumerable: false,
-      writable: true,
-      configurable: true,
-    });
-  },
-);
+const arrayProto = Array.prototype;
+export const arrayMethods = Object.create(arrayProto)[
+  ('push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reserve')
+].forEach(function (method) {
+  // 缓存原始方法
+  const original = arratProto[method];
+  Object.defineProperty(arrayMethods, method, {
+    value: function mutator(...args) {
+      return original.apply(this, args);
+    },
+    enumerable: false,
+    writable: true,
+    configurable: true,
+  });
+});
 ```
 
 ### 使用拦截器覆盖 Array 原型
@@ -228,7 +231,7 @@ switch (method) {
 
 ## 第四章 变化侦测相关的 API 实现原理
 
-### $watch
+### $watch /observer/instance/state.js
 
 - 用来观察一个表达式 或 computed 函数在 Vue.js 实例上的变化
 
@@ -1853,7 +1856,7 @@ export function initInjections(vm) {
 export function resolveInject(inject, vm) {
   if (inject) {
     const result = Object.create(null);
-    const keys = hasSymbol // 环境支持sumbol
+    const keys = hasSymbol // 环境支持symbol
       ? Reflect.ownKeys(inject).filter((key) => {
           // ownKeys 会遍历出不可迭代的属性
           return Object.getOwnPropertyDescriptor(inject, key).enumerable; // 筛选可迭代的属性
@@ -1885,3 +1888,320 @@ export function resolveInject(inject, vm) {
 ```
 
 - provide 注入内容时 其实是将内容注入到当前组件实例的\_provide 中，所以 inject 可以从父组件实例的\_provide 中获取注入的内通
+
+### 初始化状态
+
+![image-20220717141045239](/Users/lianyafeng/Library/Application Support/typora-user-images/image-20220717141045239.png)
+
+#### 初始化 props
+
+```js
+function normalizeProps(options, vm) {
+  const props = options.props;
+  if (!props) return;
+  const res = {};
+  let i, val, name;
+  if (Array.isArray(props)) {
+    i = props.length;
+    while (i--) {
+      val = props[i];
+      if (typeof val === 'string') {
+        name = camelize(val);
+        res[name] = { type: null };
+      } else if (isPlainObject(props)) {
+        for (const key in props) {
+          val = props[key];
+          name = camelize(key);
+          res[name] = isPlainObject(val) ? val : { type: val };
+        }
+      } else if (process.env.NODE_ENV !== 'production') {
+        warn(
+          'invalid value for option "props":exprcted an Array or an Object,' +
+            'but got ${torawType(props)}.',
+          vm,
+        );
+      }
+      option.props = res;
+    }
+  }
+}
+```
+
+- 规格化 props
+- 判断是否是个数组
+  - 是 while 循环数组 判断 props 的名称是否是 string 类型 如果不是在非生产环境下报警 如果是嗲偶用 camelize 将 props 变成驼峰
+  - 不是 判断是不是对象 是对象获取 key 与 value 判断 val 是否是 object 如果不是说明 val 是基本类型函数或者数组提供多个可能的类型 那么设置 key 为名 值为{ type: val }的属性
+
+```js
+function initProps(vm, propsOptions) {
+  const propsData = vm.$options.propsData; // 真实props数据
+  const props = (vm._props = {}); // 指向props的指针
+  // 缓存props的key
+  const keys = (vm.$options._propKeys = []);
+  const isRoot = !vm.$parent; // 判断当前组件是否是根组件
+  // root 实例的props 属性应该被转换成响应式数据
+  if (!Root) {
+    toggleObserving(false); // 根组件不需要转换成响应式
+  }
+  for (const key in propsOptions) {
+    kets.push(key);
+    const value = validateProp(key, propsOptions, propsData, vm);
+    defineReactive(props, key, value);
+    if (!(key in vm)) {
+      proxy(vm, `_props`, key);
+    }
+  }
+  toggleObserving(true);
+}
+```
+
+-
+
+#### 初始化 methods
+
+- 循环选项中的 methods 对象 没有与 props 的方法重复的那么将每个属性挂载到 vm
+
+#### 初始化 data
+
+- 判断 data 是否是一个 function 是的话调用 getData 不是返回 data 最终得到一个 data
+- 也是循环 data 判断不和 props 当中的属性重复 属性代理到 vm 上
+- 执行 observer 把数据变成响应式的
+
+#### 初始化 computed
+
+- 缓存 结合 Watcher 的 dirty 属性来分辨 dirty 是 true 需要重新计算 false 则不用
+
+- 计算属性自己的 watcher 会观察计算用到的属性的 watcher 是不是发生变化 发生变换就改变 dirty 为 true 重新触发计算 然后执行 render
+- 观察用到的属性是否发生变化 如果发生变化 但是自身的值不一定发生变化 所以做出了修改 当有属性变化的时候 计算自身的值
+
+#### 初始化 watch
+
+```js
+funciton createWatcher (vm, expOrFn, handler, options) {
+  if(isPlainObject(handler)) {
+    options = handler
+    handler = handler.handler
+  }
+  if(typrof handler === 'string') {
+    handler = vm[handler]
+  }
+  return vm.$watch(expOrFn, handler, options)
+}
+```
+
+### 初始化 provide
+
+```js
+export function initProvide(vm) {
+  const provide = vm.$options.provide;
+  if (provide) {
+    vm._provided = typeof provide === 'function' ? provide.call(vm) : provide;
+  }
+}
+```
+
+## 指令
+
+![image-20220724152553646](/Users/lianyafeng/Library/Application Support/typora-user-images/image-20220724152553646.png)
+
+### v-if
+
+### v-for
+
+### v-on
+
+```js
+let target
+funciton updateDOMListeners (oldVnode, vnode) {
+  if(isUndef(oldVnode.data.on) && isUndef(vnode.data.on)) {
+    return
+  }
+  const on = vnode.data.on || {}
+  const oldOn = oldVnode.data.on || {}
+  target = vnode.elm
+  normalizeEvents(on)
+  updateListeners(on, oldOn, add, remove, vnode.context)
+  target = undefined
+}
+```
+
+```js
+function add(event, handler, once, capture, passive) {
+  handler = withMacroTask(handler);
+  if (once) handler = createOnceHandler(handler, event, capture);
+  target.addEventListener(
+    event,
+    handler,
+    supportsPassive ? { capture, passive } : capture,
+  );
+}
+```
+
+## keep-alive
+
+- keep-alive 组件缓存 组件切换时不会对当前组件进行卸载
+- 属性
+  - include 指定需要缓存的组件 name
+  - exclude 指定不需要缓存的组件的 name
+  - max 定义组件的最大缓存个数 超过个数会将缓存时间最久的组件且目前没有访问的组件删除
+- 生命周期 用来得知当前组件是否处于活跃状状态
+  - activated
+  - deactivated
+
+### 原理
+
+- 运用了 LRU（Least Recently Used） 算法
+- 获取 keep-alive 包裹着的第一个子组件对象及组件名，如果存在多个子元素，keep-alive 要求同时只有一个子元素被渲染。调用 getFirstComponentChild 获取到第一个子元素的 VNode
+- 根据设定的黑白名单 进行条件匹配，决定是否缓存，不匹配，直接返回组件实例（VNode），否则开启缓存策略
+- 根据组件 ID 和 tag 生成缓存 key，并在缓存对象中查找是否已经缓存过该组件实例。如果存在直接取出缓存值并更新该 key 在 this.keys 中的位置
+- 如果不存在，则在 this.cache 对象中存储该组件实例并保存 key 值，检查缓存实例数量是否超过 max 设置值，超过则根据 LRU 置换策略删除最近久未使用的实例，最后将该组件的实例 keepAlive 属性设置为 true
+
+## 源码分析
+
+```js
+// 获取指定组件name
+function getComponentName(opts: ?VNodeComponentOptions): ?string {
+  return opts && (opts.Ctor.options.name || opts.tag);
+}
+// 判断当前组件是否在指定黑白名单里
+function matches(
+  pattern: string | RegExp | Array<string>,
+  name: string,
+): boolean {
+  if (Array.isArray(pattern)) {
+    return pattern.indexOf(name) > -1;
+  } else if (typeof pattern === 'string') {
+    return pattern.split(',').indexOf(name) > -1;
+  } else if (isRegExp(pattern)) {
+    return pattern.test(name);
+  }
+  /* istanbul ignore next */
+  return false;
+}
+// 遍历缓存表
+function pruneCache(keepAliveInstance: any, filter: Function) {
+  const { cache, keys, _vnode } = keepAliveInstance;
+  for (const key in cache) {
+    const cachedNode: ?VNode = cache[key];
+    if (cachedNode) {
+      const name: ?string = getComponentName(cachedNode.componentOptions);
+      if (name && !filter(name)) {
+        pruneCacheEntry(cache, key, keys, _vnode);
+      }
+    }
+  }
+}
+// 依据 key 值从缓存表中移除对应组件
+function pruneCacheEntry(
+  cache: VNodeCache,
+  key: string,
+  keys: Array<string>,
+  current?: VNode,
+) {
+  const cached = cache[key];
+  if (cached && (!current || cached.tag !== current.tag)) {
+    cached.componentInstance.$destroy();
+  }
+  cache[key] = null;
+  remove(keys, key);
+}
+
+export default {
+  name: 'keep-alive',
+  // 抽象组件
+  abstract: true,
+
+  // 接收的参数
+  props: {
+    include: patternTypes,
+    exclude: patternTypes,
+    max: [String, Number],
+  },
+
+  // 创建缓存表
+  created: function created() {
+    this.cache = Object.create(null);
+    this.keys = [];
+  },
+
+  destroyed: function destroyed() {
+    for (var key in this.cache) {
+      pruneCacheEntry(this.cache, key, this.keys);
+    }
+  },
+
+  mounted: function mounted() {
+    this.$watch('include', function (val) {
+      pruneCache(this, function (name) {
+        return matches(val, name);
+      });
+    });
+    this.$watch('exclude', function (val) {
+      pruneCache(this, function (name) {
+        return !matches(val, name);
+      });
+    });
+  },
+
+  render: function render() {
+    var slot = this.$slots.default;
+    // 获取 `keep-alive` 包裹着的第一个子组件对象及其组件名；
+    // 如果 keep-alive 存在多个子元素，`keep-alive` 要求同时只有一个子元素被渲染。
+    // 所以在开头会获取插槽内的子元素，
+    // 调用 `getFirstComponentChild` 获取到第一个子元素的 `VNode`。
+    var vnode = getFirstComponentChild(slot);
+    var componentOptions = vnode && vnode.componentOptions;
+    if (componentOptions) {
+      // check pattern
+      var name = getComponentName(componentOptions);
+      var ref = this;
+      var include = ref.include;
+      var exclude = ref.exclude;
+      // 根据设定的黑白名单（如果有）进行条件匹配，决定是否缓存。
+      if (
+        // not included
+        (include && (!name || !matches(include, name))) ||
+        // excluded
+        (exclude && name && matches(exclude, name))
+      ) {
+        // 不匹配，直接返回组件实例（`VNode`），否则开启缓存策略。
+        return vnode;
+      }
+
+      const { cache, keys } = this;
+      // 根据组件ID和tag生成缓存Key
+      var key =
+        vnode.key == null
+          ? componentOptions.Ctor.cid +
+            (componentOptions.tag ? '::' + componentOptions.tag : '')
+          : vnode.key;
+      if (cache[key]) {
+        // 并在缓存对象中查找是否已缓存过该组件实例。如果存在，直接取出缓存值
+        vnode.componentInstance = cache[key].componentInstance;
+        // 并更新该key在this.keys中的位置（更新key的位置是实现LRU置换策略的关键）。
+        remove(keys, key);
+        keys.push(key);
+      } else {
+        // 如果不存在，则在this.cache对象中存储该组件实例并保存key值，
+        cache[key] = vnode;
+        keys.push(key);
+        // 之后检查缓存的实例数量是否超过max设置值，超过则根据LRU置换策略删除最近最久未使用的实例
+        if (this.max && keys.length > parseInt(this.max)) {
+          pruneCacheEntry(cache, keys[0], keys, this._vnode);
+        }
+      }
+      // 最后将该组件实例的keepAlive属性值设置为true。
+      vnode.data.keepAlive = true;
+    }
+    return vnode || (slot && slot[0]);
+  },
+};
+```
+
+### 性能更好
+
+使用 keepAlive 后，被 keepAlive 包裹的组件在经过第一次渲染后，VNode 和 DOM 都会被缓存起来，然后下一次再次渲染该组件的时候，直接从缓存中拿 VNode 和 DOM，然后渲染，不需要走一系列的组件初始化 render patch 等流程 减少了 script 的执行时间，性能更好
+
+### 总结
+
+Vue 内部将 DOM 节点抽象成了一个个 VNode 节点，keep-alive 也是基于 VNode 进行缓存而不是 DOM，将满足条件（include 和 exclude）的组件进行缓存，当需要再次渲染的时候将 VNode 从 cache 中拿出并渲染
