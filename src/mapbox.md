@@ -18,8 +18,7 @@
 - name 指的是 地图的样式名称标注
 - sprite 其实就是雪碧图 主要是将图标拼接成一张图片
 - glyphs 主要是地图上面的字体
-- source
-  -
+- ## source
 
 # mapbox Example
 

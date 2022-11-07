@@ -11,7 +11,8 @@
 - 组件
 - rn vr
 - 单向数据流
-- 虚拟dom
+- 虚拟 dom
+
 ## 安装
 
 - npm i react react-dom
@@ -37,8 +38,9 @@
 </script>
 ```
 
-## 脚手架create-react-app
-- 是facebook团队开发的 用于构建react但页面应用的脚手架工具
+## 脚手架 create-react-app
+
+- 是 facebook 团队开发的 用于构建 react 但页面应用的脚手架工具
 
 - npx create-react-app my-app
 
@@ -927,12 +929,13 @@ export default withAddToCart(Robot)
 ```
 
 ## 高阶组件的作用
+
 ```javascript
 export const withAddToCart = (
-  ChildComponent: React.ComponentType<RobotProps>
+  ChildComponent: React.ComponentType<RobotProps>,
 ) => {
   return (props) => {
-    const setState = useContext(appSetStateContext)
+    const setState = useContext(appSetStateContext);
     const addToCart = (id, name) => {
       if (setState) {
         setState((state) => {
@@ -941,15 +944,15 @@ export const withAddToCart = (
             shoppingCart: {
               items: [...state.shoppingCart.items, { id, name }],
             },
-          }
-        })
+          };
+        });
       }
-    }
-    return <ChildComponent {...props} addToCart={addToCart} />
-  }
-}
-
+    };
+    return <ChildComponent {...props} addToCart={addToCart} />;
+  };
+};
 ```
+
 ### render props 模式
 
 ```javascript
@@ -1353,6 +1356,7 @@ const App = () => (
 - 给默认路由添加 exact 属性
 
 ## hooks
+
 - `hooks是一个钩子，给函数组件增加了状态管理和生命周期，react hooks 的出现，标示着 react 中不会在存在无状态组件了，只有类组件和函数组件`
 - useState() 返回值 [状态，状态更新函数]
 - 副作用钩子 useEffect()
@@ -1367,10 +1371,12 @@ const App = () => (
 - useLayoutEffect
 - useCallback
 - useDebugValue
+
 ## 纯函数
+
 - 函数返回结果只依赖于它的参数
-- 函数执行过程里面没有副作用
--`执行一个纯函数你不用担心它会干什么坏事，它不会产生不可预料的行为，也不会对外部产生影响`
+- 函数执行过程里面没有副作用 -`执行一个纯函数你不用担心它会干什么坏事，它不会产生不可预料的行为，也不会对外部产生影响`
+
 ## redux 数据仓库
 
 - `redux统一保存数据，在隔离了数据与ui的同时，负责处理数据的绑定`
@@ -1396,39 +1402,47 @@ const App = () => (
     ![image-20210203190139360](./img/WX20210614-180135.png)
 
 ## redux redux-toolkit
-  - createSlice 处理reducer和aciton结合
-  - createAsyncThunk 处理异步
+
+- createSlice 处理 reducer 和 aciton 结合
+- createAsyncThunk 处理异步
 
 ## redux-persist 登陆持久化
-  - cookie webstorage session
-  - cookie 4k webstorage 5M 
-  - cookie和webstorage保存在浏览器 session保存在服务器
-  - persistStore, persistReducer
+
+- cookie webstorage session
+- cookie 4k webstorage 5M
+- cookie 和 webstorage 保存在浏览器 session 保存在服务器
+- persistStore, persistReducer
+
 ## 发布流程
-  - npm install -g serve
-  - npm install , npm run build
-  - serve -s build || serve -s build -l 端口号
+
+- npm install -g serve
+- npm install , npm run build
+- serve -s build || serve -s build -l 端口号
 
 ## docker
-  - 开源的容器化虚拟技术
-  - 可移植
-  - 非常轻量级
-  - 直接运行在宿主机器的内核上
-## docker的三个核心概念
-  - registry镜像仓库
-    - docker Hub `https://hub.docker.com/ / node`
-  - Image镜像
-    - docker命令拉去镜像 docker pull node
-  - Container容器
-    - 容器启动命令 docker run
+
+- 开源的容器化虚拟技术
+- 可移植
+- 非常轻量级
+- 直接运行在宿主机器的内核上
+
+## docker 的三个核心概念
+
+- registry 镜像仓库
+  - docker Hub `https://hub.docker.com/ / node`
+- Image 镜像
+  - docker 命令拉去镜像 docker pull node
+- Container 容器
+  - 容器启动命令 docker run
     ![image-20210317131945829](./img/docker.png)
     ![image-20210317131945829](./img/docker-mingling.png)
-  - docker pull centos:latest 下载最新centos
-  - docker ren -p 9566:80 --name web -i -t centos /bin/bash
-  - rpm -ivh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
-  - yum install -y nginx
+- docker pull centos:latest 下载最新 centos
+- docker ren -p 9566:80 --name web -i -t centos /bin/bash
+- rpm -ivh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+- yum install -y nginx
 
-  - docker build + Dockerfile
+- docker build + Dockerfile
+
 ```xml
   # 第一个阶段： 拉取node镜像来打包React项目
   FROM node:14 as build
@@ -1445,9 +1459,10 @@ const App = () => (
   COPY --from=build /app/build /usr/share/nginx/html
   EXPOSE 80
   CMD ["nginx","-g","daemon off;"]
-  
+
 ```
-  - docker build -t react-web . 拷贝镜像到docker容器
-  - docker images 检查镜像
-  - docker run -d -p 12231:80 react-web 启动项目
-  - docker ps 检查项目运行情况
+
+- docker build -t react-web . 拷贝镜像到 docker 容器
+- docker images 检查镜像
+- docker run -d -p 12231:80 react-web 启动项目
+- docker ps 检查项目运行情况

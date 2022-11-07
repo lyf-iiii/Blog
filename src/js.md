@@ -1,5 +1,5 @@
-
 # Js 知识点
+
 ## 拖拽
 
 - onmousedown 鼠标按下事件
@@ -51,7 +51,8 @@ window.onload = function () {
 - 原型（`prototype`）：一个简单的对象，用于实现对象的**属性继承**。可以简单的理解成对象的爹。在 Firefox 和 Chrome 中，每个`JavaScript`对象中都包含一个`__proto__`(非标准)的属性指向它爹（该对象的原型），可用 `obj.__proto__`进行访问。
 - 构造函数：可以通过 new 来**新建一个对象**的函数。
 - 实例：通过构造函数和`new`创建出来的对象，便是实例。**实例通过**`__proto__`**指向原型，通过**`constructor`**指向构造函数**
-- Object.prototype.__proto__ === null
+- Object.prototype.**proto** === null
+
 ## 原型链
 
 - 原型链是由原型对象组成的
@@ -93,7 +94,7 @@ f1(); //3 2 1
 
 ## 闭包
 
-- 优点：避免全局变量污染 
+- 优点：避免全局变量污染
 - 就是能够读取去他函数内部变量的函数。
 
 ```javascript
@@ -107,27 +108,32 @@ function init() {
 }
 init();
 ```
+
 - 闭包的作用
   - 用于从外部读取其他函数内部变量的函数
   - 可以使用闭包来模拟私有方法
   - 让这些变量的值始终保持在内存中
-- 闭包的使用场景： 
+- 闭包的使用场景：
+
   - 1.创建私有变量 2.延长变量的生命周期
-  - 1.return一个函数
+  - 1.return 一个函数
+
   ```javascript
-  var n = 10
-  function fn(){
-      var n =20
-      function f() {
-        n++;
-        console.log(n)
-      }
-      return f
+  var n = 10;
+  function fn() {
+    var n = 20;
+    function f() {
+      n++;
+      console.log(n);
+    }
+    return f;
   }
-  var x = fn()
-  x() // 21
+  var x = fn();
+  x(); // 21
   ```
+
   - 2. 函数作为参数
+
   ```javascript
   var a = '林一一'
   function foo(){
@@ -144,9 +150,11 @@ init();
   f(foo())
   /* 输出
   *   foo
-  / 
+  /
   ```
+
   - 3.IIFE(自执行函数)
+
   ```js
   var n = '林一一';
   (function p(){
@@ -154,25 +162,30 @@ init();
   })()
   /* 输出
   *   林一一
-  / 
+  /
   ```
+
   - 4.循环赋值
+
   ```js
-  for(var i = 0; i<10; i++){
-    (function(j){
-        setTimeout(function(){
-          console.log(j)
-      }, 1000) 
-    })(i)
+  for (var i = 0; i < 10; i++) {
+    (function (j) {
+      setTimeout(function () {
+        console.log(j);
+      }, 1000);
+    })(i);
   }
   ```
+
   - 5.使用回调函数就是在使用闭包
+
   ```js
-  window.name = '林一一'
-  setTimeout(function timeHandler(){
+  window.name = '林一一';
+  setTimeout(function timeHandler() {
     console.log(window.name);
-  }, 100)
+  }, 100);
   ```
+
   ```javascript
   function makeSizer(size) {
     return function () {
@@ -224,14 +237,14 @@ init();
 - 浅拷贝 以赋值的形式拷贝引用对象，仍指向同一个地址，修改时原对象也会收到影响
   - `Object.assign`
   - 展开运算符（...）
-  - lodash clone 
+  - lodash clone
 - 深拷贝 完全拷贝一个新对象，**修改时原对象不再受到任何影响**
   - `JSON.parse(JSON.stringify(obj))`:性能最快
     - 具有循环引用的对象时，报错
     - 当值为函数、`undefined`、或者`symbol`时，无法拷贝
   - 递归进行逐一赋值
-  -  lodash __.cloneDeep
-  -  $.extend
+  - lodash \_\_.cloneDeep
+  - $.extend
 
 ## new 运算符的执行过程
 
@@ -287,24 +300,33 @@ function type(obj) {
 - n 秒后在执行该事件，若在 n 秒内被重复触发，则重新计时
 - **节流** ： n 秒内只运行一次，若在 n 秒内重复触发，只有一次执行
   - 常用与滚动条事件 或者是 resize 事件
-## js的由来 以及单线程的原因
-- js最初被设计为浏览器的脚本语言
+
+## js 的由来 以及单线程的原因
+
+- js 最初被设计为浏览器的脚本语言
 - 主要对页面的操作、与浏览器的交互、与用户的交互、页面逻辑处理等
-- 当多个线程对dom节点进行操作，线程间对同步问题就会很复杂，为了解决这个问题js被设计成了单线程
+- 当多个线程对 dom 节点进行操作，线程间对同步问题就会很复杂，为了解决这个问题 js 被设计成了单线程
+
 ## AST 抽象语法树
 
 - 将代码逐字母解析成树状对象的形式，这是语言之间的转换、代码语法检查、代码风格检查、代码格式化，代码高亮，代码错误提示、代码自动补全等的基础
-## js代码的执行过程
-- js引擎在执行js代码的时候，会进行词法分析、语法分析、语义分析等操作，生生ast抽象语法树，根据ast抽象语法树生成cpu可执行的机器码并执行
+
+## js 代码的执行过程
+
+- js 引擎在执行 js 代码的时候，会进行词法分析、语法分析、语义分析等操作，生生 ast 抽象语法树，根据 ast 抽象语法树生成 cpu 可执行的机器码并执行
+
 ## babel 编译原理
 
 - babylon 将 es6/es7 代码解析成 AST
 - babel-traverse 对 AST 进行遍历转译，得到新的 AST
 - 新 AST 通过 babel-generator 转换成 es5
-## v8引擎运行的三个阶段
-- 语法分析阶段：检查是否有语法错误SyntaxError，有的话在console抛出异常并中止执行
-- 编译阶段:进行执行上下文（Execution Context）的创建，包括变量对象、建立作用域链、确定this的指向等
+
+## v8 引擎运行的三个阶段
+
+- 语法分析阶段：检查是否有语法错误 SyntaxError，有的话在 console 抛出异常并中止执行
+- 编译阶段:进行执行上下文（Execution Context）的创建，包括变量对象、建立作用域链、确定 this 的指向等
 - 执行阶段:将编译阶段中创建的执行上下文压入调用站，并成为正在运行的执行上下文，代码执行结束后，将其弹出调用栈
+
 ## 函数柯里化
 
 - 为一个函数设置通用函数供重复使用
@@ -720,9 +742,9 @@ const totalYears = pilots.reduce((acc, pilot) => acc + pilot.years, 0);
 - 箭头函数
 - proxy
 - 解构赋值
-- symbol 
+- symbol
   - 确保唯一，即使采用相同的名称，也会产生不同的值，我们创建一个字段，仅为 知道对应 symbol 的人能访问，使用 symbol 很有用
-  - symbol 并不是 100%隐藏，有内置方法 Object.getOwnPropertySymbols(obj)可以获得所有的 symbol。 
+  - symbol 并不是 100%隐藏，有内置方法 Object.getOwnPropertySymbols(obj)可以获得所有的 symbol。
   - 也有一个方法 Reflect.ownKeys(obj)返回对象所有的键，包括 symbol。 所以并不是真正隐藏。但大多数库内置方法和语法结构遵循通用约定他们是隐藏的。
 
 ## this
@@ -735,6 +757,7 @@ const totalYears = pilots.reduce((acc, pilot) => acc + pilot.years, 0);
 - 6、apply 和 call 允许切换函数执行的上下文环境（context），即 this 绑定的对象，可以将 this 引用到任何对象。
 - 箭头函数本身没有 this 指向 箭头函数当中的 this 指向作用域对象 setTimeout()的 this 本身指向 window 在 setTimeout 当中使用箭头函数可以把 this 指向更换到当前作用域
 - `this指向:最后调用当前代码的那个对象`
+
 ## 数组扁平化
 
 - 数组扁平化是指讲一个多位数组变为一维数组
@@ -743,35 +766,36 @@ const totalYears = pilots.reduce((acc, pilot) => acc + pilot.years, 0);
 - tostring split
 - join + split
 - 递归 递归的遍历每一项，若为数组则继续遍历，否则 concat
+
 ```javascript
 // 方法一
-let arr = [1, 2, [3, 4, [5, [6]]]]
-console.log(arr.flat(Infinity))//flat参数为指定要提取嵌套数组的结构深度，默认值为 1
+let arr = [1, 2, [3, 4, [5, [6]]]];
+console.log(arr.flat(Infinity)); //flat参数为指定要提取嵌套数组的结构深度，默认值为 1
 
 // 方法二
 function fn(arr) {
   return arr.reduce((prev, cur) => {
-    return prev.concat(Array.isArray(cur) ? fn(cur) : cur)
-  }, [])
+    return prev.concat(Array.isArray(cur) ? fn(cur) : cur);
+  }, []);
 }
 
 // 手动flatten函数
-var arr = [1, 2, 3, [4, 5], [6, [7, [8]]]]
+var arr = [1, 2, 3, [4, 5], [6, [7, [8]]]];
 function wrap() {
-  let ret = []
+  let ret = [];
   return function flat(a) {
     for (var item of a) {
       if (item.construstor === Array) {
-        ret.concat(flat(item))
+        ret.concat(flat(item));
       } else {
-        ret.push(item)
+        ret.push(item);
       }
     }
-    return ret
-  }
+    return ret;
+  };
 }
 
-console.log(wrap()(arr))
+console.log(wrap()(arr));
 ```
 
 ## dom 的 api
@@ -786,9 +810,9 @@ console.log(wrap()(arr))
 ## virtual dom
 
 - 本质上是 js 和 dom 之间做了一个缓存
-- 1.用js对象模拟dom树，得到一棵虚拟dom树
-- 2.当页面数据变更时，生成新的虚拟dom树。比较新旧两颗虚拟dom树的差异
-- 3.把差异应用到真正的dom树上
+- 1.用 js 对象模拟 dom 树，得到一棵虚拟 dom 树
+- 2.当页面数据变更时，生成新的虚拟 dom 树。比较新旧两颗虚拟 dom 树的差异
+- 3.把差异应用到真正的 dom 树上
 
 ## function 可以 new 那么箭头函数可以吗
 
@@ -797,230 +821,267 @@ console.log(wrap()(arr))
   - 箭头函数没有 prototype 属性
   - 在 new 操作符的操作中 箭头函数不满足
 
-## JavaScript对象的底层数据结构是什么
-  - 堆和栈组合
-  - 基本数据类型是存放在栈中
-  - 引用数据类信访
+## JavaScript 对象的底层数据结构是什么
+
+- 堆和栈组合
+- 基本数据类型是存放在栈中
+- 引用数据类信访
 
 ## 基本类型对应的内置对象，以及他们之间的装箱拆箱操作
-  - 装箱：
-    - 把基本数据类型转化为对应的引用数据类型的操作**，装箱分为隐式装箱和显示装箱
-    - 隐式装箱
-  ```javascript
-  	let a = 'sun'
-    let b = a.indexof('s') // 0 // 返回下标
-    // 上面代码在后台实际的步骤为：
-    let a = new String('sun')
-    let b = a.indexof('s')
-    a = null
-  ```
-  - 
-      - 显式装箱
-  ```javascript
-  let a = new String('sun	')
-  ```
-  - 拆箱
-  ```javascript
-  	let name = new String('sun')
-	let age = new Number(24)
-	console.log(typeof name) // object
-	console.log(typeof age) //  object
-	// 拆箱操作
-	console.log(typeof age.valueOf()); // number // 24  基本的数字类型
-	console.log(typeof name.valueOf()); // string  // 'sun' 基本的字符类型
-	console.log(typeof age.toString()); // string  // '24' 基本的字符类型
-	console.log(typeof name.toString()); // string  // 'sun' 基本的字符类型
-  ```
-## null和undefined的区别
-  - null表示"没有对象"，即该处不应该有值
-  - undefined表示"缺少值"，就是此处应该有一个值，但是还没有定义
+
+- 装箱：
+  - 把基本数据类型转化为对应的引用数据类型的操作\*\*，装箱分为隐式装箱和显示装箱
+  - 隐式装箱
+
+```javascript
+let a = 'sun';
+let b = a.indexof('s'); // 0 // 返回下标
+// 上面代码在后台实际的步骤为：
+let a = new String('sun');
+let b = a.indexof('s');
+a = null;
+```
+
+- - 显式装箱
+
+```javascript
+let a = new String('sun	');
+```
+
+- 拆箱
+
+```javascript
+let name = new String('sun');
+let age = new Number(24);
+console.log(typeof name); // object
+console.log(typeof age); //  object
+// 拆箱操作
+console.log(typeof age.valueOf()); // number // 24  基本的数字类型
+console.log(typeof name.valueOf()); // string  // 'sun' 基本的字符类型
+console.log(typeof age.toString()); // string  // '24' 基本的字符类型
+console.log(typeof name.toString()); // string  // 'sun' 基本的字符类型
+```
+
+## null 和 undefined 的区别
+
+- null 表示"没有对象"，即该处不应该有值
+- undefined 表示"缺少值"，就是此处应该有一个值，但是还没有定义
 
 ## 判断数据类型的几种方法
-  - typeof 用于判断基本数据类型 判断引用数据类型困难
-  - instanceof 用于检测原型 
-  - Object.prototype.toString() 所有类型的对象都适用 返回对象的类型
-  - constructor 用于查看构造函数
+
+- typeof 用于判断基本数据类型 判断引用数据类型困难
+- instanceof 用于检测原型
+- Object.prototype.toString() 所有类型的对象都适用 返回对象的类型
+- constructor 用于查看构造函数
   ![image-20210317131945829](./img/20191119190601909.png)
 
-## es6 class的底层实现
+## es6 class 的底层实现
+
 ```javascript
-	//转义前
-	class Parent{
-		constructor(name,age){
-	  		this.name = name
-	      this.age = age
-	 	 }
-	 	 //类公有方法
-		  sayName(){
-		  	console.log(this.name)
-		  }
-		  //静态方法
- 		 static sayhi(){
-  			console.log(this.name)
-  		}
-	}
-	//经过babel官网转义后
-	var Parent = /*#__PURE__*/function () {
-		function Parent(name, age) {
-   		   _classCallCheck(this, Parent);
-		    this.name = name;
-		    this.age = age;
-	   }
-	  _createClass(Parent, [{
-	    key: "sayName",
-	    value: function sayName() {
-	      console.log(this.name);
-	    }
-	  }], [{
-	    key: "sayhi",
-	    value: function sayhi() {
-	      console.log(this.name);
-	    }
-	}]);
- 	return Parent;
-}();
+//转义前
+class Parent {
+  constructor(name, age) {
+    this.name = name;
+    this.age = age;
+  }
+  //类公有方法
+  sayName() {
+    console.log(this.name);
+  }
+  //静态方法
+  static sayhi() {
+    console.log(this.name);
+  }
+}
+//经过babel官网转义后
+var Parent = /*#__PURE__*/ (function () {
+  function Parent(name, age) {
+    _classCallCheck(this, Parent);
+    this.name = name;
+    this.age = age;
+  }
+  _createClass(
+    Parent,
+    [
+      {
+        key: 'sayName',
+        value: function sayName() {
+          console.log(this.name);
+        },
+      },
+    ],
+    [
+      {
+        key: 'sayhi',
+        value: function sayhi() {
+          console.log(this.name);
+        },
+      },
+    ],
+  );
+  return Parent;
+})();
 ```
+
 ```javascript
-	function _classCallCheck(instance, Constructor) {
-		if (! instance instanceof Constructor) { 
-		 	throw new TypeError("Cannot call a class as a function");
-		 } 
-	}
+function _classCallCheck(instance, Constructor) {
+  if (!instance instanceof Constructor) {
+    throw new TypeError('Cannot call a class as a function');
+  }
+}
 ```
-- 用于判断是否用过new关键字 用过new 说明this是Parent的实例 返回true
-- 没用过 那么this 在严格模式下是window window不是Parent的实例 返回false
-  
+
+- 用于判断是否用过 new 关键字 用过 new 说明 this 是 Parent 的实例 返回 true
+- 没用过 那么 this 在严格模式下是 window window 不是 Parent 的实例 返回 false
+
 ## 理解词法作用域和动态作用域
+
 ```javascript
 var a = 2;
 function foo() {
-    console.log( a );
+  console.log(a);
 }
 function bar() {
-    var a = 3;
-    foo();
+  var a = 3;
+  foo();
 }
 bar();
 ```
-  - 如果处于词法作用域，也就是现在的javascript环境。变量a首先在foo()函数中查找，没有找到。于是顺着作用域链到全局作用域中查找，找到并赋值为2。所以控制台输出2
-  - 如果处于动态作用域，同样地，变量a首先在foo()中查找，没有找到。这里会顺着调用栈在调用foo()函数的地方，也就是bar()函数中查找，找到并赋值为3。所以控制台输出3
-  - `两种作用域的区别，简而言之，词法作用域是在定义时确定的，而动态作用域是在运行时确定的`
-  
+
+- 如果处于词法作用域，也就是现在的 javascript 环境。变量 a 首先在 foo()函数中查找，没有找到。于是顺着作用域链到全局作用域中查找，找到并赋值为 2。所以控制台输出 2
+- 如果处于动态作用域，同样地，变量 a 首先在 foo()中查找，没有找到。这里会顺着调用栈在调用 foo()函数的地方，也就是 bar()函数中查找，找到并赋值为 3。所以控制台输出 3
+- `两种作用域的区别，简而言之，词法作用域是在定义时确定的，而动态作用域是在运行时确定的`
+
 ## 理解堆栈溢出和内存泄漏的原理，如何防止
-  - 堆栈溢出 内存空间已经被申请完 没有足够的内存可以提供
-  - 内存泄漏 某段代码执行完成之后的当中申请的内存并没有释放
-    - 1.闭包 2.遗忘的定时器 3.意外的全局变量 4.脱离dom的引用
+
+- 堆栈溢出 内存空间已经被申请完 没有足够的内存可以提供
+- 内存泄漏 某段代码执行完成之后的当中申请的内存并没有释放
+  - 1.闭包 2.遗忘的定时器 3.意外的全局变量 4.脱离 dom 的引用
 - 减少使用全局变量、闭包、避免死循环
+
 ## 如何处理循环的异步操作
-  - async/await
+
+- async/await
+
 ## 理解模块化解决的实际问题，可列举几个模块化方案并理解其中原理
 
-## 为何try里面放return，finally还会执行，理解其内部机制
-- 无论是否会产生catch，都会执行finally中的语句。
-- 如果产生catch，且catch中含有return，虽然会执行finally的语句，但返回的值依旧是catch的值，除非finally也有return。
-- 如果产生catch，且catch中不含有return，return在函数的最后面，那返回的值将是finally中的值。
-- finally代码中最好不要包含return，程序会提前退出，也就是说返回的值不是try或catch中的值，而是finally的值。
-- 如果return在try中，虽然会进入finally，但是因为finally是在return后面的表达式运算之后执行的，此时并没有返回运算之后的值，而是把值保存起来，不管finally对该值做任何的改变，返回的值都不会改变，依然返回保存起来的值。也就是说方法的返回值是在finally运算之前就确定了的。（例子1中 i 的返回值是6而不是7）
+## 为何 try 里面放 return，finally 还会执行，理解其内部机制
+
+- 无论是否会产生 catch，都会执行 finally 中的语句。
+- 如果产生 catch，且 catch 中含有 return，虽然会执行 finally 的语句，但返回的值依旧是 catch 的值，除非 finally 也有 return。
+- 如果产生 catch，且 catch 中不含有 return，return 在函数的最后面，那返回的值将是 finally 中的值。
+- finally 代码中最好不要包含 return，程序会提前退出，也就是说返回的值不是 try 或 catch 中的值，而是 finally 的值。
+- 如果 return 在 try 中，虽然会进入 finally，但是因为 finally 是在 return 后面的表达式运算之后执行的，此时并没有返回运算之后的值，而是把值保存起来，不管 finally 对该值做任何的改变，返回的值都不会改变，依然返回保存起来的值。也就是说方法的返回值是在 finally 运算之前就确定了的。（例子 1 中 i 的返回值是 6 而不是 7）
 
 ## Promise 并行和串行理解
+
 - 并行：多个异步请求同时进行
+
 ```javascript
 var promises = function () {
-  return [1000, 2000, 3000].map(current => {
+  return [1000, 2000, 3000].map((current) => {
     return new Promise(function (resolve, reject) {
       setTimeout(() => {
-        console.log(current)
-      }, current)
-    })
-  })
-}
+        console.log(current);
+      }, current);
+    });
+  });
+};
 
 Promise.all(promises()).then(() => {
-  console.log('end')
-})
+  console.log('end');
+});
 ```
+
 - 串行：一个异步请求完了之后在进行下一个异步请求
+
 ```javascript
 var p = function () {
   return new Promise(function (resolve, reject) {
     setTimeout(() => {
-      console.log('1000')
-      resolve()
-    }, 1000)
-  })
-}
+      console.log('1000');
+      resolve();
+    }, 1000);
+  });
+};
 var p1 = function () {
   return new Promise(function (resolve, reject) {
     setTimeout(() => {
-      console.log('2000')
-      resolve()
-    }, 2000)
-  })
-}
+      console.log('2000');
+      resolve();
+    }, 2000);
+  });
+};
 var p2 = function () {
   return new Promise(function (resolve, reject) {
     setTimeout(() => {
-      console.log('3000')
-      resolve()
-    }, 3000)
-  })
-}
+      console.log('3000');
+      resolve();
+    }, 3000);
+  });
+};
 
-p().then(() => {
-  return p1()
-}).then(() => {
-  return p2()
-}).then(() => {
-  console.log('end')
-})
+p()
+  .then(() => {
+    return p1();
+  })
+  .then(() => {
+    return p2();
+  })
+  .then(() => {
+    console.log('end');
+  });
 ```
+
 ## 什么是高阶函数
+
 - 将函数作为参数或者返回值的函数
+
 ```js
-function highOrder(params,callback){
-  return callback(params)
+function highOrder(params, callback) {
+  return callback(params);
 }
 ```
 
 ## 将伪数组转化为数组
-  - Array.prototype.slice.call() 不兼容ie8以下
-  - 兼容ie8以下
+
+- Array.prototype.slice.call() 不兼容 ie8 以下
+- 兼容 ie8 以下
+
 ```javascript
-  function listToArray(likeArray){
-    var ary = []
-    try{
-      Array.prototype.slice.call(likeArray)
-    }catch(e){
-      for(var i =0;i<likeArray.length;i++){
-        ary[ary.length] = likeArray[i] 
-      }
+function listToArray(likeArray) {
+  var ary = [];
+  try {
+    Array.prototype.slice.call(likeArray);
+  } catch (e) {
+    for (var i = 0; i < likeArray.length; i++) {
+      ary[ary.length] = likeArray[i];
     }
   }
+}
 
+// arguments
+function fn() {
+  console.log(arguments);
+  console.log(Array.prototype.slice.call(arguments));
+}
+fn(1, 2, 3, 4, 5);
 
-  // arguments 
-  function fn(){
-    console.log(arguments)
-    console.log(Array.prototype.slice.call(arguments))
-  }
-  fn(1,2,3,4,5)
+// 含有length属性的对象
+let obj1 = {
+  0: 1,
+  1: '蔡徐坤',
+  2: '鹿晗',
+  length: 3,
+};
+console.log(Array.prototype.slice.call(obj1));
 
-  // 含有length属性的对象
-  let obj1 = {
-    0:1,
-    1:'蔡徐坤',
-    2:'鹿晗',
-    length:3
-  }
-  console.log(Array.prototype.slice.call(obj1))
+// 数组的拼接 必须用apply
 
-  // 数组的拼接 必须用apply
- 
-  let arr11 = [1,2,3]
-  let arr22 = [4,5,6]
+let arr11 = [1, 2, 3];
+let arr22 = [4, 5, 6];
 
-  console.log(arr11.concat(arr22))
+console.log(arr11.concat(arr22));
 
-  Array.prototype.push.apply(arr11,arr22)
-
+Array.prototype.push.apply(arr11, arr22);
 ```

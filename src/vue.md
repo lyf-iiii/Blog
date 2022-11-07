@@ -2,32 +2,35 @@
 
 ## 数据响应式
 
-- 通过Proxy代理模式
+- 通过 Proxy 代理模式
 - proxy 所谓代理 是你要取得某样东西的中介，而不是直接作用在这个对象上，这就类似我们网购东西某需要在网店平台上购买，而不是直接向厂家购买
 - Proxy 对象就是这样的媒介，要操作这个对象的话某需要经过这个媒介的同意
+
 ```js
 function observe(obj) {
-      if (typeof obj !== 'object' || obj === null) {
-        return
+  if (typeof obj !== 'object' || obj === null) {
+    return;
+  }
+  const handler = {
+    get: function (target, key) {
+      const val = target[key];
+      if (typeof val === 'object' && val !== null) {
+        return new Proxy(val, handler);
       }
-      const handler = {
-        get: function (target, key) {
-          const val = target[key]
-          if (typeof val === 'object' && val !== null) {
-            return new Proxy(val, handler)
-          }
-          console.log('get value')
-          return Reflect.get(target, key)
-        },
-        set: function (target, key, val) {
-          console.log('change value')
-          return Reflect.set(target, key, val)
-        }
-      }
-      return new Proxy(obj, handler)
-    }
+      console.log('get value');
+      return Reflect.get(target, key);
+    },
+    set: function (target, key, val) {
+      console.log('change value');
+      return Reflect.set(target, key, val);
+    },
+  };
+  return new Proxy(obj, handler);
+}
 ```
+
 - 通过 object.definePropert()
+
 ```javascript
 function render() {
   console.log('模拟视图渲染');
@@ -173,30 +176,31 @@ class Watcher {
 - model 负责 javascript
 - viewModel 负责把 Model 和 view 连接起来，把 model 的数据同步到 view，把 view 的修改同步回 model
 - viewModel 通过数据绑定和事件绑定
-```html
-  <input type="text" id="input">
-  <p id="p"></p>
-  <script>
-    var input = document.getElementById('input')
-    var p = document.getElementById('p')
-    var obj = {
-      name: ''
-    }
-    Object.defineProperty(obj, 'name', {
-      set: function (val) {
-        input.value = val
-        p.innerHTML = val
-      },
-      get: function (val) {
-        return val
-      }
-    })
-    input.addEventListener('input', function (e) {
-      obj.name = e.target.value
-    })
-  </script>
 
+```html
+<input type="text" id="input" />
+<p id="p"></p>
+<script>
+  var input = document.getElementById('input');
+  var p = document.getElementById('p');
+  var obj = {
+    name: '',
+  };
+  Object.defineProperty(obj, 'name', {
+    set: function (val) {
+      input.value = val;
+      p.innerHTML = val;
+    },
+    get: function (val) {
+      return val;
+    },
+  });
+  input.addEventListener('input', function (e) {
+    obj.name = e.target.value;
+  });
+</script>
 ```
+
 ## vue-router 是什么?它有哪些组件
 
 - vue-router 是 vue 官方的路由管理器
@@ -212,53 +216,63 @@ class Watcher {
 
 - /user/:id
 - $route.params.变量名
-- 当动态路由的动态参数切换时 实际上路由已经发生改变但是组件并没有重新加载所以需要使用watch监听$route的变化 或者用beforeRouteUpdate 监听
+- 当动态路由的动态参数切换时 实际上路由已经发生改变但是组件并没有重新加载所以需要使用 watch 监听$route 的变化 或者用 beforeRouteUpdate 监听
+
 ## 使用元信息控制路由访问权限
-- 给路由添加meta属性
+
+- 给路由添加 meta 属性
+
 ```js
-router.beforeEach((to,from,next)=>{
-  if(to.meta.requiredLogin && !store.state.user.isLogin){ // 未登录且必须登录才能访问的耶main 跳转到登录页面
-    next({name:'Login'})
-  }else if(to.meta.redirectAlreadyLogin && store.state.user.isLogin){ // 已经登录访问登录页面跳转首页
-    next('/')
-  }else{
-    next()
+router.beforeEach((to, from, next) => {
+  if (to.meta.requiredLogin && !store.state.user.isLogin) {
+    // 未登录且必须登录才能访问的耶main 跳转到登录页面
+    next({ name: 'Login' });
+  } else if (to.meta.redirectAlreadyLogin && store.state.user.isLogin) {
+    // 已经登录访问登录页面跳转首页
+    next('/');
+  } else {
+    next();
   }
-})
+});
 ```
-## router addRoute动态鉴权
-- 在vuex里保存一个状态 isLogin：false
+
+## router addRoute 动态鉴权
+
+- 在 vuex 里保存一个状态 isLogin：false
+
 ```js
 // router.js
 export const asyncRoutes = [
   {
-    path:'/dashboard',
-    component:Dashboard
-  }
-]
+    path: '/dashboard',
+    component: Dashboard,
+  },
+];
 // 组件中
-
 ```
+
 ## router 的滚动行为
+
 ```js
 const router = new VueRouter({
-  mode:'history',
+  mode: 'history',
   routes,
-  scrollBehavior(to,from,savedPosition){
-    if(savedPosition){
-      console.log(savedPosition)
-      return savedPosotion
-    }else{
-      const position = {}
-      position.selector = to.hash
-      if(to.hash === '#nav'){
-        position.offset = { y:110 }
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      console.log(savedPosition);
+      return savedPosotion;
+    } else {
+      const position = {};
+      position.selector = to.hash;
+      if (to.hash === '#nav') {
+        position.offset = { y: 110 };
       }
-      return position
+      return position;
     }
-  }
-})
+  },
+});
 ```
+
 ## vue-router 有哪几种导航钩子?
 
 - beforeEach 前置守卫
@@ -300,8 +314,10 @@ const router = new VueRouter({
 - this.$emit('事件名‘)
 
 ## 兄弟组件中传递参数
+
 - event Bus
-- 两个组件分别import main.js当中的{eventBus} 进行`$emit` 订阅 `$on` 发布
+- 两个组件分别 import main.js 当中的{eventBus} 进行`$emit` 订阅 `$on` 发布
+
 ## 如何让 CSS 只在当前组件中起作用
 
 - 当前组件`<style>`写成`<style scoped>`
@@ -309,7 +325,7 @@ const router = new VueRouter({
 ## `<keep-alive></keep-alive>`的作用是什么?
 
 - 比如有一个列表和一个详情，那么用户就会经常执行打开详情=>返回列表=>打开详情…这样的话列表和详情都是一个频率很高的页面，那么就可以对列表组件使用<keep-alive></keep-alive>进行缓存，这样用户每次返回列表的时候，都能从缓存中快速渲染，而不是重新渲染
-- 被keep-alive 包裹的组件 再次进入会进入到activied钩子函数 不会再次触发created
+- 被 keep-alive 包裹的组件 再次进入会进入到 activied 钩子函数 不会再次触发 created
 
 ## 如何获取 dom
 
@@ -360,10 +376,12 @@ module.exports = {
 - main.js 是入口文件
 
 ## 分别简述 computed 和 watch 的使用场景
-- computed 1.具有缓存的特性 依赖某个数据的变化而watch不依赖。2.computed一般用于同步的格式化数据的场景，watch处理一些数据或者派发一些异步事件
+
+- computed 1.具有缓存的特性 依赖某个数据的变化而 watch 不依赖。2.computed 一般用于同步的格式化数据的场景，watch 处理一些数据或者派发一些异步事件
 - computed 当一个值受多个属性影响的时候------------购物车商品结算
-- watch 当一条数据的更改影响到多条数据的时候---------搜索框 
-- watch 当借款额度只有1w 输入了2w 强行转回1w 并提示msg
+- watch 当一条数据的更改影响到多条数据的时候---------搜索框
+- watch 当借款额度只有 1w 输入了 2w 强行转回 1w 并提示 msg
+
 ```js
 watch:{
   Amount:function(newVal,oldVal){
@@ -374,7 +392,8 @@ watch:{
   }
 }
 ```
--  https://www.cnblogs.com/dream111/p/13499020.html
+
+- https://www.cnblogs.com/dream111/p/13499020.html
 
 ## v-on 可以监听多个方法吗
 
@@ -694,7 +713,8 @@ var app = new Vue({
 - 在组件外部管理状态
 - 防止多个组件在共享状态时 单向数据流被迫开
 - 当多个视图要依赖同一个状态的时候 使用 vuex 可以满足
-![image-20210317131945829](./img/WX20210721-143214.png)
+  ![image-20210317131945829](./img/WX20210721-143214.png)
+
 ## state
 
 - 驱动应用的单向数据流
@@ -845,12 +865,14 @@ export default {
 
 - format 校验类型
 - addFormat 自定义校验规范
-## 在不实用proxy的前提下 实现defineProperty可以新增数据
-  - 将被遍历的数据的长度设置成1000 
+
+## 在不实用 proxy 的前提下 实现 defineProperty 可以新增数据
+
+- 将被遍历的数据的长度设置成 1000
 
 ## vue3 业务开发
+
 - 配置好架构
 - 样式初始化 normalize.css
   - npm install --save normalize.css
-- 
-
+-

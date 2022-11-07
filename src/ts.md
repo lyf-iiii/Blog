@@ -1,59 +1,74 @@
 # TypeScript 学习
-  - 任何变量都声明类型
-  - 不到万不得已不要用any
-  - 给你的对象声明接口
-## 什么是TyprScript
-  - TypeScript是一种微软开发的自由和开源的编程语言，它是javaScript的一个超集，扩展了javascript的语法
-  - 在编译时进行类型检测
-  - ts 始于js又归于js 
-    - 1.编译检查语法错误 2.转换成es6或者es5之类的
+
+- 任何变量都声明类型
+- 不到万不得已不要用 any
+- 给你的对象声明接口
+
+## 什么是 TyprScript
+
+- TypeScript 是一种微软开发的自由和开源的编程语言，它是 javaScript 的一个超集，扩展了 javascript 的语法
+- 在编译时进行类型检测
+- ts 始于 js 又归于 js
+  - 1.编译检查语法错误 2.转换成 es6 或者 es5 之类的
+
 ## tsc 命令
-  - 把ts文件编译译成js文件
+
+- 把 ts 文件编译译成 js 文件
+
 ## 类型批注
-  - 通过类型批注提供静态类型以在编译时启动类型检查
+
+- 通过类型批注提供静态类型以在编译时启动类型检查
+
 ```javascript
 function area(shape: string, width: number, height: number) {
   var area = width * height;
-  return "I'm a " + shape + " with an area of " + area + " cm squared.";
+  return "I'm a " + shape + ' with an area of ' + area + ' cm squared.';
 }
-document.body.innerHTML = area("rectangle", 30, 15);
+document.body.innerHTML = area('rectangle', 30, 15);
 ```
 
 ## interface
-  - 声明一个对象类型推荐只用接口
-  - 接口作为一个类型批注
-  - 如果接口中设置的参数缺失会报错
+
+- 声明一个对象类型推荐只用接口
+- 接口作为一个类型批注
+- 如果接口中设置的参数缺失会报错
+
 ```javascript
-interface Shape{
-  name:string;//必须的
-  width:number;
-  height:number;
-  color?:string//加了？不是必须的
+interface Shape {
+  name: string; //必须的
+  width: number;
+  height: number;
+  color?: string; //加了？不是必须的
 }
 ```
-## lambda函数表达式
-  - lambda表达式()=>{something},好处是可以自动将函数中的this附加到上下文中
+
+## lambda 函数表达式
+
+- lambda 表达式()=>{something},好处是可以自动将函数中的 this 附加到上下文中
+
 ```javascript
 var shape = {
-    name: "rectangle",
-    popup: function() {
- 
-        console.log('This inside popup(): ' + this.name);
- 
-        setTimeout( () => {
-            console.log('This inside setTimeout(): ' + this.name);
-            console.log("I'm a " + this.name + "!");
-        }, 3000);
- 
-    }
+  name: 'rectangle',
+  popup: function () {
+    console.log('This inside popup(): ' + this.name);
+
+    setTimeout(() => {
+      console.log('This inside setTimeout(): ' + this.name);
+      console.log("I'm a " + this.name + '!');
+    }, 3000);
+  },
 };
- 
+
 shape.popup();
 ```
-  - 在以上实例编译后端 js 文件中，我们可以看到一行 var _this = this;，_this 在 setTimeout() 的回调函数引用了 name 属性。
-## class类
-  - 类中的constructor的变量是局部变量 外部无法访问 需要在变量前加public可访问
-  - 如果设置类中的某个变量为类外部无法访问可以这只为private
+
+- 在以上实例编译后端 js 文件中，我们可以看到一行 var \_this = this;，\_this 在 setTimeout() 的回调函数引用了 name 属性。
+
+## class 类
+
+- 类中的 constructor 的变量是局部变量 外部无法访问 需要在变量前加 public 可访问
+- 如果设置类中的某个变量为类外部无法访问可以这只为 private
+
 ```javascript
 class Shape {
   area: number;
@@ -77,232 +92,272 @@ console.log('Color of Shape ' + square.color);
 console.log('Width of Shape ' + square.width);
 console.log('Height of Shape ' + square.height);
 ```
+
 ## 继承
-  - 派生类 继承父类 同时继承父类的属性
-  - super方法调用基类的构造函数，并传递构造函数的参数
-  - 派生类可以写基类的方法 也可以继承基类的方法到一个新方法当中
+
+- 派生类 继承父类 同时继承父类的属性
+- super 方法调用基类的构造函数，并传递构造函数的参数
+- 派生类可以写基类的方法 也可以继承基类的方法到一个新方法当中
+
 ```javascript
 class Shape3D extends Shape {
- 
+
     volume: number;
- 
+
     constructor ( public name: string, width: number, height: number, length: number ) {
         super( name, width, height );
         this.volume = length * this.area;
     };
- 
+
     shoutout() {
         return "I'm " + this.name +  " with a volume of " + this.volume + " cm cube.";
     }
- 
+
     superShout() {
         return super.shoutout();
     }
 }
- 
+
 var cube = new Shape3D("cube", 30, 30, 30);
 console.log( cube.shoutout() );
 console.log( cube.superShout() );
 ```
+
 ## any 类型
-  - 任意值是ts针对编程时类型不明确的变量使用的一中数据类型
-    - 变量的值会动态改变时，比如来自用户的输入，任意值类型可以让这些变量跳过编译阶段的类型检查
-    - 任意变量可以通过any 开启或关闭类型检查
-    - 定义各种数据类型的数组时 
+
+- 任意值是 ts 针对编程时类型不明确的变量使用的一中数据类型
+  - 变量的值会动态改变时，比如来自用户的输入，任意值类型可以让这些变量跳过编译阶段的类型检查
+  - 任意变量可以通过 any 开启或关闭类型检查
+  - 定义各种数据类型的数组时
+
 ```javascript
 let arrayList: any[] = [1, false, 'fine'];
 arrayList[1] = 100;
 ```
-## null undefined 
-  - 当一个对象的值可能为null 或者 undefined的时候 在设置类型批注时应该或运算上null 或者 undefined
+
+## null undefined
+
+- 当一个对象的值可能为 null 或者 undefined 的时候 在设置类型批注时应该或运算上 null 或者 undefined
+
 ```javascript
 // 启用 --strictNullChecks
 let x: number | null | undefined;
 x = 1; // 运行正确
-x = undefined;    // 运行正确
-x = null;    // 运行正确
-
+x = undefined; // 运行正确
+x = null; // 运行正确
 ```
-## naver 类型
-  - never 是其它类型（包括 null 和 undefined）的子类型，代表从不会出现的值。这意味着声明为 never 类型的变量只能被 never 类型所赋值，在函数中它通常表现为抛出异常或无法执行到终止点（例如无限循环）
-```javascript
 
+## naver 类型
+
+- never 是其它类型（包括 null 和 undefined）的子类型，代表从不会出现的值。这意味着声明为 never 类型的变量只能被 never 类型所赋值，在函数中它通常表现为抛出异常或无法执行到终止点（例如无限循环）
+
+```javascript
 // 运行错误，数字类型不能转为 never 类型
 x = 123;
 
 // 运行正确，never 类型可以赋值给 never类型
-x = (()=>{ throw new Error('exception')})();
+x = (() => {
+  throw new Error('exception');
+})();
 
 // 运行正确，never 类型可以赋值给 数字类型
-y = (()=>{ throw new Error('exception')})();
+y = (() => {
+  throw new Error('exception');
+})();
 
 // 返回值为 never 的函数可以是抛出异常的情况
 function error(message: string): never {
-    throw new Error(message);
+  throw new Error(message);
 }
 
 // 返回值为 never 的函数可以是无法被执行到的终止点的情况
 function loop(): never {
-    while (true) {}
+  while (true) {}
 }
 ```
+
 ## 变量声明
-  - 变量名称可以包含数字和字母
-  - 变量名称只能包含_和$ 这两个特殊符号
-  - 变量名不可以以数字开头
+
+- 变量名称可以包含数字和字母
+- 变量名称只能包含\_和$ 这两个特殊符号
+- 变量名不可以以数字开头
+
 ## 类型推断
-  - ts根据首次被赋的值来进行类型推断
-  - 如果缺乏声明不能推断出类型 将会给变量一个any类型
+
+- ts 根据首次被赋的值来进行类型推断
+- 如果缺乏声明不能推断出类型 将会给变量一个 any 类型
+
 ```javascript
-var num = 2;    // 类型推断为 number
-console.log("num 变量的值为 "+num); 
-num = "12";    // 编译错误
+var num = 2; // 类型推断为 number
+console.log('num 变量的值为 ' + num);
+num = '12'; // 编译错误
 console.log(num);
 ```
+
 ## 变量作用域
-  - 全局作用域 
-  - 类作用域 变量声明在一个类当中 可以通过类对访问 类变量也可以是静态的，静态的变量可以通过类名直接访问
-  - 局部作用域 - 局部变量 局部变量只能在声明它的一个代码块中使用
-  
+
+- 全局作用域
+- 类作用域 变量声明在一个类当中 可以通过类对访问 类变量也可以是静态的，静态的变量可以通过类名直接访问
+- 局部作用域 - 局部变量 局部变量只能在声明它的一个代码块中使用
+
 ```javascript
-var global_num = 12          // 全局变量
-class Numbers { 
-   num_val = 13;             // 实例变量
-   static sval = 10;         // 静态变量
-   
-   storeNum():void { 
-      var local_num = 14;    // 局部变量
-   } 
-} 
-console.log("全局变量为: "+global_num)  
-console.log(Numbers.sval)   // 静态变量
-var obj = new Numbers(); 
-console.log("实例变量: "+obj.num_val)
+var global_num = 12; // 全局变量
+class Numbers {
+  num_val = 13; // 实例变量
+  static sval = 10; // 静态变量
+
+  storeNum(): void {
+    var local_num = 14; // 局部变量
+  }
+}
+console.log('全局变量为: ' + global_num);
+console.log(Numbers.sval); // 静态变量
+var obj = new Numbers();
+console.log('实例变量: ' + obj.num_val);
 ```
-## tsconfig.json的作用
+
+## tsconfig.json 的作用
+
 - 编译待编译文件 定义编译选项
-## tsconfig.json的配置
+
+## tsconfig.json 的配置
+
 - comppilerOptions 编译选项
   - target 目标代码
   - module 模块化方案 （commonjs require/module.exports/es module import /export）
-  - strict 严格的语法检查 比如会检查出any
-  - jsx 对jsx进行怎样的处理 转化为h函数 或者createElement也可以不转化 （perserve）
+  - strict 严格的语法检查 比如会检查出 any
+  - jsx 对 jsx 进行怎样的处理 转化为 h 函数 或者 createElement 也可以不转化 （perserve）
   - importHelpers 辅助导入功能
-  - moduleResolution 按照node的方式去解析模块 import './index.node'
-  - skipLibCheck  跳过一些库（axios，loadsh）的类型检测 
-  - esModuleInterop allowSyntheticDefaultImports 控制export default/module。exports能不能一起使用 也就是es module 和 commonjs能不能一起使用
+  - moduleResolution 按照 node 的方式去解析模块 import './index.node'
+  - skipLibCheck 跳过一些库（axios，loadsh）的类型检测
+  - esModuleInterop allowSyntheticDefaultImports 控制 export default/module。exports 能不能一起使用 也就是 es module 和 commonjs 能不能一起使用
   - sourceMap 要不要生成映射文件 ts -> js
-  - baseUrl 文件路径在解析的时候 基本url 默认基于当前文件
+  - baseUrl 文件路径在解析的时候 基本 url 默认基于当前文件
   - types 指定具体要解析使用的类型
-  - paths 路径解析 '@/*'：['/src/*']
+  - paths 路径解析 '@/_'：['/src/_']
   - lib 可以指定在项目中可以使用哪些库的类型
-- include 哪些ts代码需要编译解析
+- include 哪些 ts 代码需要编译解析
 - exclude 哪些模块不需要解析 一般 node_modules 里面的库不需要解析
-## 如何配置typescript编译器
-- vscode在项目中写配置文件
-## typescript 的 数据类型 
-  - any
-    - 可以被任何数据类型赋值 也可以赋值给任何数据类型
-  - unknown
-    - 可以被任意数据类型复制 但是只可赋值给any和unknown
-  - void
-    - 当一个函数没有返回值的时候 可以设置void类型
-  - naver
-    - 可以用来监督函数是否对可接收的数据类型做处理
-  ```js
-    function gandleMessage(message:string|number|boolean){
-      switch(typeof message){
-        case 'string':
-          console.log("string处理方式处理message“)
-          break
-        case ‘number’:
-          console.log("number处理方式处理message“)
-          break
-        case 'boolean':
-          console.log("boolean处理方式处理message“)
-          break
-        default:
-          const check:never = message
-      }
+
+## 如何配置 typescript 编译器
+
+- vscode 在项目中写配置文件
+
+## typescript 的 数据类型
+
+- any
+  - 可以被任何数据类型赋值 也可以赋值给任何数据类型
+- unknown
+  - 可以被任意数据类型复制 但是只可赋值给 any 和 unknown
+- void
+  - 当一个函数没有返回值的时候 可以设置 void 类型
+- naver
+  - 可以用来监督函数是否对可接收的数据类型做处理
+
+```js
+  function gandleMessage(message:string|number|boolean){
+    switch(typeof message){
+      case 'string':
+        console.log("string处理方式处理message“)
+        break
+      case ‘number’:
+        console.log("number处理方式处理message“)
+        break
+      case 'boolean':
+        console.log("boolean处理方式处理message“)
+        break
+      default:
+        const check:never = message
     }
-  ```
-  - tuple
-    - 元组类型
-  ```js
-  // tuple 的应用场景
-  // react hook useState
-  // const [couter, setCounter] = useState(10)
-    function useState(state:any){
-      let currentState = state
-      
-      const changeState = (newState : any)=>{
-        currentState = newState
-      }
+  }
+```
 
-      const tuple:[any,(newState:any)=>void] = [currentState,changeState]
+- tuple
+  - 元组类型
 
-      return tuple
-    }
+```js
+// tuple 的应用场景
+// react hook useState
+// const [couter, setCounter] = useState(10)
+function useState(state: any) {
+  let currentState = state;
 
-    const [counter, setCounter] = useState(10)
-    setCounter(1000)
+  const changeState = (newState: any) => {
+    currentState = newState;
+  };
 
-    const [title,setTitle] = useState('abc')
-  // 优化 加泛型
-    function useStateB<T>(state:T){
-      let currentState = state
-      
-      const changeState = (newState : T)=>{
-        currentState = newState
-      }
+  const tuple: [any, (newState: any) => void] = [currentState, changeState];
 
-      const tuple:[T,(newState:T)=>void] = [currentState,changeState]
+  return tuple;
+}
 
-      return tuple
-    }
+const [counter, setCounter] = useState(10);
+setCounter(1000);
 
-    const [counter, setCounter] = useState(10)
-    setCounter(1000)
+const [title, setTitle] = useState('abc');
+// 优化 加泛型
+function useStateB<T>(state: T) {
+  let currentState = state;
 
-    const [title,setTitle] = useState('abc')
+  const changeState = (newState: T) => {
+    currentState = newState;
+  };
+
+  const tuple: [T, (newState: T) => void] = [currentState, changeState];
+
+  return tuple;
+}
+
+const [counter, setCounter] = useState(10);
+setCounter(1000);
+
+const [title, setTitle] = useState('abc');
 ```
 
 ## 对象类型
 
 ```js
 // point 是行参
-function printPoint(point:{x:number,y:number}){
-  console.log(point.x)
-  console.log(point.y)
+function printPoint(point: { x: number, y: number }) {
+  console.log(point.x);
+  console.log(point.y);
 }
-printPoint({x:123,y:123}) // 里面的对象是个实参
+printPoint({ x: 123, y: 123 }); // 里面的对象是个实参
 
 // 可选类型
-function printPoint(point:{x:number,y:number,z?:number}){ //z加了？之后是一个可选类型
-  console.log(point.x)  
-  console.log(point.y)
+function printPoint(point: { x: number, y: number, z?: number }) {
+  //z加了？之后是一个可选类型
+  console.log(point.x);
+  console.log(point.y);
 }
-printPoint({x:123,y:123}) // 里面的对象是个实参
-printPoint({x:123,y:123,z:123}) // 里面的对象是个实参
+printPoint({ x: 123, y: 123 }); // 里面的对象是个实参
+printPoint({ x: 123, y: 123, z: 123 }); // 里面的对象是个实参
 ```
+
 ## 联合类型
+
 ```js
 // number|string 就是一个联合类型
-function printID(id:number|string){
+function printID(id: number | string) {
   // 使用联合类型的值时 需要特别的小心
   // narrow L：缩小
-  if(typeof id === 'string'){
+  if (typeof id === 'string') {
     // TypeSvript 帮助确定id 一定是string 类型
-    console.log(id.toUpperCase())
-  }else{
-    console.log(id)
+    console.log(id.toUpperCase());
+  } else {
+    console.log(id);
   }
 }
 ```
+
 ## 类型别名
-  - type ID = number | String
+
+- type ID = number | String
+
 ## 类型断言
-  - 通过类型断言把普遍点的类型变成一个具体类型
+
+- 通过类型断言把普遍点的类型变成一个具体类型
+
 ```js
 
 // 断言1
@@ -339,6 +394,7 @@ const message = "Hello World"
 ```
 
 ## 非空类型断言
+
 ```js
 function printMessageLength(message?:string){
   // if(message){
@@ -350,7 +406,9 @@ function printMessageLength(message?:string){
 printMessageLength('aaa')
 printMessageLength('hello world')
 ```
-## 可选链 属于ecmascript 2020 不是属于typescript
+
+## 可选链 属于 ecmascript 2020 不是属于 typescript
+
 ```js
   type Person = {
     name:String
@@ -370,46 +428,50 @@ printMessageLength('hello world')
 ```
 
 ## !!运算符
-  - 将js 基础类型变成布尔值
+
+- 将 js 基础类型变成布尔值
 
 ## ??运算符
-  - 当某个值为null 给一个默认值
+
+- 当某个值为 null 给一个默认值
 
 ## 字面量类型
+
 ```js
-  const message:'Hello World' = 'Hello World'
-  let num:123 = 123
-  // num = 321 会报错
+const message: 'Hello World' = 'Hello World';
+let num: 123 = 123;
+// num = 321 会报错
 
-  // 字面量类型的意义 就是必须结合联合类型
-  type Alignment = 'left' | 'right' | 'center'
+// 字面量类型的意义 就是必须结合联合类型
+type Alignment = 'left' | 'right' | 'center';
 
-  let align : Alignment = 'left'
-  align = 'right'
-  align = 'center'
-
+let align: Alignment = 'left';
+align = 'right';
+align = 'center';
 ```
 
 ## 字面量推理
+
 ```js
- type Method = 'GET' | 'POST'
- function request(url:string,method:Method){}
+type Method = 'GET' | 'POST';
+function request(url: string, method: Method) {}
 
- type Request = {
-   url:string,
-   method:Method
- }
+type Request = {
+  url: string,
+  method: Method,
+};
 
- const options:Request = {
-   url:"http://www.coderwhy.org/abc",
-   method:"POST" // 如果options不使用Request 那么传入的method 会被推理为String类型 这样不符合Method类型 会 报错
- }
+const options: Request = {
+  url: 'http://www.coderwhy.org/abc',
+  method: 'POST', // 如果options不使用Request 那么传入的method 会被推理为String类型 这样不符合Method类型 会 报错
+};
 
- request(options.url,options.method) // 或者给传入options.method 加上 as Method 的类型断言
- export {}
+request(options.url, options.method); // 或者给传入options.method 加上 as Method 的类型断言
+export {};
 ```
 
 ## 函数类型
+
 ```js
 function calc(n1:number,n2:number,fn:(num1:number,num2:number)=>{
   return fn(n1,n2)
@@ -425,7 +487,9 @@ calc(20,30,function(a1,a2){
 ```
 
 ## 函数的重载
- - 含义：函数的名称相同，但是参数不同的几个函数，就是函数的重载
+
+- 含义：函数的名称相同，但是参数不同的几个函数，就是函数的重载
+
 ```js
   // 实现方式一：联合类型
     function getLength(args:string | any[]){
@@ -444,70 +508,74 @@ calc(20,30,function(a1,a2){
 ```
 
 ## 类
+
 ```js
 class Person {
-  name:string
-  age:number
-  
-  constructor(name:string,age:number){
-    this.name = name
-    this.age = age
+  name: string;
+  age: number;
+
+  constructor(name: string, age: number) {
+    this.name = name;
+    this.age = age;
   }
 
-  eating(){
-    console.log('eating')
+  eating() {
+    console.log('eating');
   }
 }
-class Student extends Person{
-  sno:string
+class Student extends Person {
+  sno: string;
 
-  constructor(sno:string){
-    super() // 相当于调用了父类的constructor
-    this.sno = sno
+  constructor(sno: string) {
+    super(); // 相当于调用了父类的constructor
+    this.sno = sno;
   }
 
-  studying(){
-    console.log('studying')
+  studying() {
+    console.log('studying');
   }
 }
 ```
 
 ## 类的多态
+
 ```js
-  class Animal{
-    action(){
-      console.log('animal action')
-    }
+class Animal {
+  action() {
+    console.log('animal action');
   }
+}
 
-  class Dog extends Animal{
-    action(){
-      console.log('dog running!')
-    }
+class Dog extends Animal {
+  action() {
+    console.log('dog running!');
   }
+}
 
-  class Fish extends Animal {
-    action(){
-      console.log("fish swimming")
-    }
+class Fish extends Animal {
+  action() {
+    console.log('fish swimming');
   }
+}
 
-  function makeActions(animals:Animal[]){
-    animals.forEach(animal => {
-      // 此时传进来的对象会调用子类的action 
-      // 父类引用指向子类对象
-      // const animal1:Animal = new Dog()
-      // 每次调用父类但是新建了一个子类的实例来去调用的这个过程 叫做多态
-      animal.action() 
-    })
-  }
+function makeActions(animals: Animal[]) {
+  animals.forEach((animal) => {
+    // 此时传进来的对象会调用子类的action
+    // 父类引用指向子类对象
+    // const animal1:Animal = new Dog()
+    // 每次调用父类但是新建了一个子类的实例来去调用的这个过程 叫做多态
+    animal.action();
+  });
+}
 
-  makeActions([new Dog(),new Fish()])
+makeActions([new Dog(), new Fish()]);
 ```
 
 ## 类修饰符
-  - privated 私有的 在类的内部可以访问 外界无法访问
-  - protected 在类内部和子类中可以访问
+
+- privated 私有的 在类的内部可以访问 外界无法访问
+- protected 在类内部和子类中可以访问
+
 ```js
   class Person{
     protected name:string = '123'
@@ -524,6 +592,7 @@ class Student extends Person{
 ```
 
 ## setter/getter 访问器
+
 ```js
 class Person {
   private _name:string
@@ -545,34 +614,39 @@ class Person {
 
 const p = new Person("why")
 p.name = "coderlyf"
-console.log(p.name) 
+console.log(p.name)
 ```
 
 ## 类的静态成员
+
 - 访问属性或者方法的时候可以不通过对象实例 直接通过 对象.属性 对象.方法 来访问
+
 ```js
 class Student {
-  static time:string = "20:00"
+  static time: string = '20:00';
 
-  static attendClass(){
-    console.log("去学习～")
+  static attendClass() {
+    console.log('去学习～');
   }
 }
 
-console.log(Student.time)
-Student.attendClass()
+console.log(Student.time);
+Student.attendClass();
 ```
 
-## 抽象类abstract
+## 抽象类 abstract
+
 - 抽象函数必须存放在抽象类中 抽象类实例化会报错 因为抽象类不可以被实例化
-- 抽象函数可以没有实现体 例如 
+- 抽象函数可以没有实现体 例如
 - 抽象类当中的抽象方法 必须要被子类实现
 - 抽象类的方法 如果有实现体 那么可以不加 abstract
+
 ```js
 class Shape {
   abstract getArea()
 }
 ```
+
 ```js
 function makeArea(shape:Shape){
   return shape.getArea()
@@ -596,7 +670,7 @@ class Rectangle extends Shape{
 }
 
 class Circle extends Shape{
-  private r:number 
+  private r:number
 
   constructor(r:number){
     super()
@@ -610,30 +684,30 @@ class Circle extends Shape{
 ```
 
 ## 类的类型
+
 ```js
 class Persom {
-  name:String = "123"
-  eating(){}
+  name: String = '123';
+  eating() {}
 }
 
-const p = new Person()
+const p = new Person();
 
-const p1 : Person = {
-  name: "why",
-  eating(){
+const p1: Person = {
+  name: 'why',
+  eating() {},
+};
 
-  }
+function printPerson(p: Person) {
+  console.log(p.name);
 }
 
-function printPerson(p:Person){
-  console.log(p.name)
-}
-
-printPerson(new Person())
-printPerson({name:"kobe",eating:function(){}})
+printPerson(new Person());
+printPerson({ name: 'kobe', eating: function () {} });
 ```
 
 ## 索引类型
+
 ```js
 // 定义一个索引类型的接口
 interface IndexLanguage {
@@ -647,51 +721,50 @@ const frontLanguage:IndexLanguage = {
   // "abd":"dbc" // 报错
 }
 ```
+
 ## 接口的继承
+
 ```js
-  interface ISwin {
-    swimming:()=> void
-  }
-
-  interface IFly {
-    flying:()=> void
-  }
-
-  interface IAction extends ISwim,IFly {
-
-  }
-
-  const action:IAction = {
-    swimming(){
-
-    },
-    fiying(){}
-  }
-
-```
-
-## 交叉类型
-```js
-// 一种组合类型的方式：联合类型
-type WhyType = number | string
-type Direction = "left" | "right" | "center"
-
-// 另一种组建类型的方式：交叉类型
-type WType = number & string
-
-interface ISwim {
-  swimming:() => void
+interface ISwin {
+  swimming: () => void;
 }
 
 interface IFly {
-  flying:() => void
+  flying: () => void;
 }
 
-type MyType1 = ISwim | IFly
-type MyType2 = ISwim & IFly
+interface IAction extends ISwim, IFly {}
+
+const action: IAction = {
+  swimming() {},
+  fiying() {},
+};
+```
+
+## 交叉类型
+
+```js
+// 一种组合类型的方式：联合类型
+type WhyType = number | string;
+type Direction = 'left' | 'right' | 'center';
+
+// 另一种组建类型的方式：交叉类型
+type WType = number & string;
+
+interface ISwim {
+  swimming: () => void;
+}
+
+interface IFly {
+  flying: () => void;
+}
+
+type MyType1 = ISwim | IFly;
+type MyType2 = ISwim & IFly;
 ```
 
 ## 接口的实现
+
 ```js
   interface ISwim {
     swimming:()=> void
@@ -739,52 +812,56 @@ type MyType2 = ISwim & IFly
   swimAction(new Fish())
   swimAction(new Person())
 ```
+
 ## 接口的合并
 
 ```js
 interface IFoo {
-  name:string
+  name: string;
 }
 
-interface IFoo{
-  age:number
+interface IFoo {
+  age: number;
 }
 
-const foo : IFoo = {
-  name :"why",
-  age:18
-}
+const foo: IFoo = {
+  name: 'why',
+  age: 18,
+};
 ```
 
 ## type 和 interface 的区别
-- type 是不可以重复定义的 但是interface是可以的而且相同的接口会合并
+
+- type 是不可以重复定义的 但是 interface 是可以的而且相同的接口会合并
 
 ## 字面量赋值
+
 ```js
-  interface IPerson {
-    name:String,
-    age:number,
-    height:number
-  }
+interface IPerson {
+  name: String;
+  age: number;
+  height: number;
+}
 
- // const p:IPerson = {
-   // name:'why',
-   // age:18,
-   // height:'1.88',
-   // address:"广州市"
- // } 会报错因为IPerson 里面 没有 address属性
+// const p:IPerson = {
+// name:'why',
+// age:18,
+// height:'1.88',
+// address:"广州市"
+// } 会报错因为IPerson 里面 没有 address属性
 
- const info = {
-   name:'why',
-   age:18,
-   height:1.88,
-   address:"广州市"
- }
- // freshness擦除
- const p : IPerson = info 
+const info = {
+  name: 'why',
+  age: 18,
+  height: 1.88,
+  address: '广州市',
+};
+// freshness擦除
+const p: IPerson = info;
 ```
 
 ## 枚举的类型
+
 ```js
 enum Direction {
   LEFT = 'LEFT',
@@ -811,6 +888,7 @@ function turnDirention(direction:Direction){
   }
 }
 ```
+
 ## 泛型
 
 - 传入一个 T 来做类型参数 根据 ts 的类型推导传入的参数是什么类型
@@ -848,23 +926,26 @@ function identity<T>(arg:T):T{
 }
 
 let myIdentity: GenericIdentityFn = identity
-// ------------------------------------- 
+// -------------------------------------
 
 ```
+
 ## 泛型接口
+
 ```js
-interface IPerson <T1 = string ,T2 = number> {
-  name:T1,
-  age:T2
+interface IPerson<T1 = string, T2 = number> {
+  name: T1;
+  age: T2;
 }
 
-const p:IPerson = {
-  name:"why",
-  age:18
-}
+const p: IPerson = {
+  name: 'why',
+  age: 18,
+};
 ```
 
 ## 泛型类
+
 ```js
 class Point<T>{
   x:T,
@@ -880,10 +961,11 @@ class Point<T>{
 ```
 
 ## 泛型的类型限制
+
 ```js
 interface ILength {
   length:number
-} 
+}
 
 function getLength<T exrends ILength>(arg:T){
   return arg.length
@@ -895,8 +977,9 @@ getLength({length:100})
 ```
 
 ## xx.d.ts
+
 - 这种文件是生命文件
-- axios 直接引入就可以找到axios对象使用 是因为 nodes_modules中的axios里有index.s.ts文件
-- 但是lodash引入之后会报错 
-  - 解决1: npm install @types/lodash -D
-  - 解决2: 手动在项目里面编写 xx.d.ts文件
+- axios 直接引入就可以找到 axios 对象使用 是因为 nodes_modules 中的 axios 里有 index.s.ts 文件
+- 但是 lodash 引入之后会报错
+  - 解决 1: npm install @types/lodash -D
+  - 解决 2: 手动在项目里面编写 xx.d.ts 文件
