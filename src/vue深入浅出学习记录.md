@@ -179,7 +179,7 @@ export class Observer {
 ### 在拦截器中获取 Observer 实例
 
 - 借助工具函数 def 在 value 中增加一个不可枚举的属性 ob 这个 ob 就是当前 observer 的实例
-- 因为拦截器是原型方法 所以 可以直接使用 `this.__ob__`来访问 Observer 实例
+- 因为拦截器是原型方法 所以 可以直接使用`this.__ob__`来访问 Observer 实例
 
 ### 向数组的依赖发送通知
 

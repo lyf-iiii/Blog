@@ -34,7 +34,7 @@
 
 - 当我们引入一个插件 或者是 vue.global.js 全局变量 Vue 就已经可以使用了因为在 rollup 中我们可以通过配置 format：‘iife'来设置
 
-### 直接使用<script type="module"> 标签的原因
+### 直接使用`<script type="module">` 标签的原因
 
 - 是因为 vue 输出 vue.esm-brower.js 文件
 

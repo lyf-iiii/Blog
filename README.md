@@ -2,7 +2,7 @@
 
 ## install
 
-- yarn
+- pnpm i
 
 ## run
 
