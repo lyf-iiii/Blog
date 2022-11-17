@@ -306,13 +306,13 @@ var person1 = JSON.parse(JSON.stringify(person));
 
 ```js
 function debounce(fn, delay) {
-  const timer
+  let timer;
   return function () {
     if (timer) {
-      clearTimeout(timer)
+      clearTimeout(timer);
     }
-    timer = setTimeout(fn, delay)
-  }
+    timer = setTimeout(fn, delay);
+  };
 }
 ```
 
@@ -390,10 +390,13 @@ console.log('script end');
 // 6. 最后的运行结果为 "script start", "script end", "promise 1", "error caught", "errorFunc", "promise 2", "errorFunc then res", "setTimeout"
 
 // 题目2
+
 console.log('start');
 setTimeout(() => {
+  // 宏1
   console.log('children2');
   Promise.resolve().then(() => {
+    // 微1
     console.log('children3');
   });
 }, 0);
@@ -401,37 +404,44 @@ setTimeout(() => {
 new Promise(function (resolve, reject) {
   console.log('children4');
   setTimeout(function () {
+    // 宏2
     console.log('children5');
     resolve('children6');
   }, 0);
 }).then((res) => {
+  // 微2
   console.log('children7');
   setTimeout(() => {
+    // 宏3
     console.log(res);
   }, 0);
 });
-//start children4 children2  children3 children7 children5 children 6
+
+//start ，children4，children2，children3，children5，children7 ，children 6
 
 // 题目3
 const p = function () {
   return new Promise((resolve, reject) => {
     const p1 = new Promise((resolve, reject) => {
       setTimeout(() => {
+        // 宏1
         resolve(1);
       }, 0);
       resolve(2);
     });
     p1.then((res) => {
+      // 微1
       console.log(res);
     });
-    console.log(3);
+    console.log(3); // 主程序
     resolve(4);
   });
 };
 p().then((res) => {
+  // 微2
   console.log(res);
 });
-console.log('end');
+console.log('end'); // 主程序
 // 3 end 2 4
 
 //题目4
@@ -443,7 +453,7 @@ async function async1() {
 async function async2() {
   console.log('async2');
 }
-console.log('script start');
+console.log('script start'); // 主程序
 setTimeout(function () {
   console.log('setTimeout');
 }, 0);
@@ -454,10 +464,11 @@ new Promise(function (resolve) {
 }).then(function () {
   console.log('promise2');
 });
-console.log('script end');
+console.log('script end'); // 主程序
 // script start，async1 start,async2,promise1,script end,async1 end,promise2 ,setTimeout
 
 //题目5
+//
 let resolvePromise = new Promise((resolve) => {
   let resolvedPromise = Promise.resolve();
   resolve(resolvedPromise);
@@ -465,16 +476,20 @@ let resolvePromise = new Promise((resolve) => {
   // Promise.resolve().then(() => resolvedPromise.then(resolve));
 });
 resolvePromise.then(() => {
+  // 微1
   console.log('resolvePromise resolved');
 });
 let resolvedPromiseThen = Promise.resolve().then((res) => {
+  // 微2
   console.log('promise1');
 });
 resolvedPromiseThen
   .then(() => {
+    // 微3
     console.log('promise2');
   })
   .then(() => {
+    // 微4
     console.log('promise3');
   });
 //promise1，promise2，resolvePromise resolved，promise3
@@ -746,6 +761,30 @@ Promise.race = function (promiseArr) {
         reject(err);
       },
     );
+  });
+};
+```
+
+## Promise.allSettled
+
+```js
+Promise.allSettled = function (promiseArr) {
+  const arr = [];
+  promiseArr.forEach((p, i) => {
+    Promise.resolve(p)
+      .then(
+        (val) => {
+          arr.push({ status: 'fullfilled', value: val });
+        },
+        (reason) => {
+          arr.push({ status: 'rejected', reason });
+        },
+      )
+      .finally(() => {
+        if (i >= promiseArr.length - 1) {
+          resolve(arr);
+        }
+      });
   });
 };
 ```
