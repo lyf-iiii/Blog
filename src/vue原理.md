@@ -377,5 +377,232 @@ function autorun(update) {
 
 # vue3 原理
 
-- defineComponent
-  - 传入一个对象 再返回一个对象
+## createApp
+
+- ensureRenderer
+
+  - 处理 props 属性，处理 Dom 节点操作
+  - 交给 createRenderer
+
+- createRenderer
+
+  - 把接收到的 options 传递给 baseCreateRenderer
+
+- baseCreateRenderer
+
+  - 实现 vnode、diff、patch
+  - 最终返回 render、hydrate、createApp：createAppAPI(render,hydrate)三个函数
+
+- createAppAPI（这个函数才是真正的 createApp）
+  - 加载 context 对象 -> createAppContext()
+  - 触发 use、mixin、component、directives、mount、unmount
+
+## h 函数
+
+- 接收三个参数
+  - type
+  - propsOrChildren 数据对象
+    - 主要表示 props, attrs, dom props, class 和 style
+  - children 子节点
+- 接收之后调用\_createVNode
+  -
+  - 设置 type 必传
+  - 标准化 class 支持 string object array 三种模式
+  - 标注化 style 支持 object Array 两种模式
+  - 构造 vnode 模型对象设置所有属性
+  - 并利用 normalizeChildren 构造 vnode 的 children 以此构造出 vnode tree
+  -
+
+## reactive
+
+- 判断对象是否只读 是直接返回
+- 否则调用 createReactiveObject 创建 observe
+- createReactiveObject(target, isReadonly, baseHandlers, collectionHandlers)
+  - target 必须是对象否则报错
+  - target 如果已经是响应式 直接返回
+  - 检查对象是否能被观察 不能 直接返回
+    - 没有打上 v-skip 标记
+    - 是可观察的类型（object、Array、Map、Set、WeakSet、WeakMap）
+  - 借助 Proxy 创建 observe
+  - 给 target 打上已经是响应式的标记
+
+```js
+function reactive(target) {
+  const handler = {
+    get(target, key, receiver) {
+      track(receiver, key); // 访问时收集依赖
+      return Reflect.get(target, key, receiver);
+    },
+    set(target, key, value, receiver) {
+      Reflect.set(target, key, value, receiver);
+      trigger(receiver, key); // 设值时自动通知更新
+    },
+  };
+
+  return new Proxy(target, handler);
+}
+```
+
+## ref
+
+- 判断是否是 一个 ref 如果是直接返回
+- 是浅观察 直接返回一个 ref
+- 如果不是浅观察借助 reactive 转换、然后构造一个 ref 返回
+- convert 方法 判断是对象借助 reactive 如果不是直接返回
+- ref 的结构是 再 get 方法中调用 track 收集依赖 再 set 方法中解释 trigger 触发依赖
+
+## baseHandlers handler 处理器
+
+- mutableHandlers 可变处理
+  - get track
+  - set trigger
+  - deleteProperty
+    - 检查是否存在目标 key
+    - 执行删除操作 Reflect.deleteProperty(target, key)
+  - has 是否有某个属性
+  - ownKeys 返回目标对象的属性组成的数组
+- readonlyHandlers 只读处理
+- shallowReactiveHandlers 浅观察处理（只观察目标对象的第一层属性）
+- shallowReadonlyHandlers 浅观察 && 只读处理
+
+## effect
+
+- fn
+- options
+  - lazy 是否延迟触发 effect
+  - computed 是否为计算属性
+  - scheduler 调度函数
+  - onTrack 追踪时触发
+  - onTrigger 触发回调时触发
+  - onStop 停止监听时触发
+- 判断是否是 effect 是就重置为原始对象 raw 属性就是原始对象
+- 创建 effect createReactiveEffect(fn, options)
+- 如果没有传入 lazy 则直接执行一次 effect
+- createReactiveEffect
+  - 判断是否激活 是否有调度函数 有返回调度函数 无 执行 fn
+  - 如果 effectStacks 集合中没有当前 effect
+    - cleanup 清空以来数组 effect 每次执行都会重新收集依赖 deps 是 effect 的依赖数组 需要全部清空
+    - 开始重新手机以来 并当当前 effect 设置为 activeEffect
+    - 将 effect 从 effectStacks 中弹出
+    - 重置依赖
+    - 重置 activeEffect
+
+## track 收集依赖
+
+- targetMap 是一个 weakMap 是 target 对象与对应 deps 依赖数组的 集成字典
+
+- 检查 targetMap（weakMap） 中有没有当前 target 如果没有 就新建一个 map
+- 检查 depsMap 中有没有对应 key 的 value 如果没有新建一个
+- 依赖数组 dep 中没有 activeEffect 当前副作用函数 把 activeEffect 加入 dep 把 dep 加入 activeEffect 的以来数组 deps 中
+
+```js
+function track(target, key) {
+  // 如果此时activeEffect为null则不执行下面
+  // 这里判断是为了避免例如console.log(person.name)而触发track
+  if (!activeEffect) return;
+  let depsMap = targetMap.get(target);
+  if (!depsMap) {
+    targetMap.set(target, (depsMap = new Map()));
+  }
+
+  let dep = depsMap.get(key);
+  if (!dep) {
+    depsMap.set(key, (dep = new Set()));
+  }
+  dep.add(activeEffect); // 把此时的activeEffect添加进去
+}
+```
+
+## trigger 触发依赖
+
+- 判断 targetMap 是否有当前对象的依赖 没有直接返回
+- 把依赖分成 effects 普通依赖和 computedRunners 计算属性依赖
+- 设置一个 run 方法用于触发依赖 触发 onTrigger
+- 遍历两种依赖数组 逐一触发响应的依赖
+
+```js
+function trigger(target, key) {
+  let depsMap = targetMap.get(target);
+  if (depsMap) {
+    const dep = depsMap.get(key);
+    if (dep) {
+      dep.forEach((effect) => effect());
+    }
+  }
+}
+```
+
+## computed 缓存
+
+- 传入一个 getter 函数 返回一个不可手动修改 的 ref
+- 或者传入用 get set 函数 的对象 创建一个 可以手动修改的 ref
+- 判断传入的 getterOrOptions 是一个 function 说明是一个只读 computed 给 getter 赋值
+- 如果是对象 说明是字段定义 getter setter 的可修改计算属性
+- 创建一个副作用函数 runner = effect() 设置 lazy computed 为 true
+- 并传入一个调度函数（触发更新时把 dirty 设置为 true 不会立即更新） 判断 dirty 不存在的时候 触发依赖 trigger 函数
+- 构造 computed 返回
+  - 如果 dirty 为 true 触发更新 trigger
+  - 如果 dirty 为 false 不是脏值 直接返回值
+
+```js
+export function computed<T>(
+  getterOrOptions: ComputedGetter<T> | WritableComputedOptions<T>
+) {
+  let getter: ComputedGetter<T>
+  let setter: ComputedSetter<T>
+
+  // 如果传入是 function 说明是只读 computed
+  if (isFunction(getterOrOptions)) {
+    getter = getterOrOptions
+    setter = __DEV__
+      ? () => {
+          console.warn('Write operation failed: computed value is readonly')
+        }
+      : NOOP
+  } else {
+    // 不是方法说明是自定义的 getter setter
+    getter = getterOrOptions.get
+    setter = getterOrOptions.set
+  }
+
+  let dirty = true
+  let value: T
+  let computed: ComputedRef<T>
+
+  // 创建 effect, 我们在看 effect 源码时知道了传入 lazy 代表不会立即执行，computed 表明 computed 上游依赖改变的时候，会优先 trigger runner effect, scheduler 表示 effect trigger 的时候会调用 scheduler 而不是直接调用 effect
+  const runner = effect(getter, {
+    lazy: true,
+    // mark effect as computed so that it gets priority during trigger
+    computed: true,
+    scheduler: () => {
+      // 在触发更新时把dirty置为true, 不会立即更新
+      if (!dirty) {
+        dirty = true
+        trigger(computed, TriggerOpTypes.SET, 'value')
+      }
+    }
+  })
+
+  // 构造一个 computed 返回
+  computed = {
+    __v_isRef: true,
+    // expose effect so computed can be stopped
+    effect: runner,
+    get value() {
+      // dirty为ture, get操作时，执行effect获取最新值
+      //
+      if (dirty) {
+        value = runner()
+        dirty = false
+      }
+      // dirty为false, 表示值未更新，直接返回
+      track(computed, TrackOpTypes.GET, 'value')
+      return value
+    },
+    set value(newValue: T) {
+      setter(newValue)
+    }
+  } as any
+  return computed
+}
+```

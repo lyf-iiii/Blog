@@ -870,9 +870,20 @@ export default {
 
 - 将被遍历的数据的长度设置成 1000
 
-## vue3 业务开发
+## vue2 和 vue3 的区别
 
-- 配置好架构
-- 样式初始化 normalize.css
-  - npm install --save normalize.css
--
+- 编译阶段
+  - diff 算法优化 静态标记 flag 被标记的下次 diff 中不会被比较
+  - 静态提升 增加静态节点 只渲染一次并缓存 下次更新时直接从缓存中拿出来
+  - 事件监听缓存
+  - ssr 优化
+    - 静态内容大到一定程度 通过 createStaticNode 创建 static node 这些静态 node 会被直接 innerHtml 不需要创建对象根据对象渲染
+- 源码体积
+  - 移除了 filter 过滤器和一些不常用的 api
+  - tree shanking
+    - 借助 esm 做静态分析，编译时判断哪些模块被加载了，将没有被使用的模块和变量 删除
+- 响应式系统
+  - 使用 proxy 进行对象代理
+    - 动态监听属性添加
+    - 可以监听数组索引和 length 属性
+    - 可以监听删除属性
