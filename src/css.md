@@ -1,5 +1,14 @@
 # CSS 知识点
 
+## cssom api
+
+- document.styleSheets
+  - 包含 html style 标签 和 link 标签 styleSheet 的集合
+- document.styleSheets[0].cssRules
+- document.styleSheets[0].insertRule('p { color: pink; }' ,0)
+- document.styleSheets[0].removeRule(0)
+- window.getComputedStyle(eltmpseudoElt,"::before") 可以取到伪元素 可以用来处理动画进行到中间的状态
+
 ## 盒模型
 
 - 每一个 html 元素都可以看为一个盒子
@@ -14,6 +23,43 @@
 - 不同点
   - transition 需要触发一个事件才能改变属性，而 animation 不需要触发任何事件的情况下才会随时间改变属性值
   - transition 为 2 祯，从 from 到 to，而 animation 可以一祯一祯的
+
+## animation
+
+- animation-name 时间曲线
+- animation-duration 动画时长
+- animation-timing-function 时间曲线
+- animation-delay 延迟
+- animation-iteration-count 播放次数
+- animation-direction 动画的方向
+
+## transition
+
+- transition-property 要变更的属性
+- transition-duration 变换的时长
+- transition-timing-function 时间曲线
+- transition-delay 延迟
+
+## css 优先级
+
+- 内联 > id > class > tagName
+- specificity 计算逻辑
+
+```js
+function specificity(selector) {
+  let p = [0, 0, 0, 0];
+  let selectParts = selector.split(' ');
+  for (let part of selectorParts) {
+    if (part.charAt(0) == '#') {
+      p[1] += 1;
+    } else if (part.chatAt(0) == '.') {
+      p[2] += 1;
+    } else {
+      p[3] += 1;
+    }
+  }
+}
+```
 
 ## BFC
 
@@ -47,6 +93,12 @@
   <div class="son"></div>
 </div>
 ```
+
+## IFC 和 BFC 的区别
+
+- IFC inline-level-formatting-context 行内级格式化上下文
+- BFC block-level-formatting-context 块级格式化上下文
+- 发生在正常流
 
 ### BFC 的理解
 

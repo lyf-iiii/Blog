@@ -1,5 +1,16 @@
 # Js 知识点
 
+- js 语言 主要是让计算机完成运算 然后完成一些流程控制
+
+## 作用域
+
+- 代码里面 从哪里到哪里 变量 发生作用
+
+## addEventListener 的冒泡与捕获
+
+- 第三个参数 为 false 先冒泡再捕获
+- 第三个参数 为 true 先捕获再冒泡
+
 ## 拖拽
 
 - onmousedown 鼠标按下事件
@@ -314,6 +325,7 @@ function type(obj) {
 ## AST 抽象语法树
 
 - 将代码逐字母解析成树状对象的形式，这是语言之间的转换、代码语法检查、代码风格检查、代码格式化，代码高亮，代码错误提示、代码自动补全等的基础
+- 编程语言分词 将词编程层层相嵌套的语法树
 
 ## js 代码的执行过程
 
@@ -741,12 +753,27 @@ const totalYears = pilots.reduce((acc, pilot) => acc + pilot.years, 0);
 - 块级作用域 主要是跟闭包相关
 - 类
 - 模版字符串
+  - 标签函数
+  ```js
+  function getPersonInfo(a, b, c) {
+    console.log(a);
+    console.log(b);
+    console.log(c);
+  }
+  const per = 'John';
+  const age = 21;
+  getPersonInfo`${per} is ${age} years old`;
+  // ['is', 'years old']
+  // John
+  // 21
+  ```
 - promise 解决回调函数嵌套问题
 - 模块化 export 和 import
 - 箭头函数
 - proxy
 - 解构赋值
 - symbol
+  - symbol 只有用作 object 的 key 一种用途
   - 确保唯一，即使采用相同的名称，也会产生不同的值，我们创建一个字段，仅为 知道对应 symbol 的人能访问，使用 symbol 很有用
   - symbol 并不是 100%隐藏，有内置方法 Object.getOwnPropertySymbols(obj)可以获得所有的 symbol。
   - 也有一个方法 Reflect.ownKeys(obj)返回对象所有的键，包括 symbol。 所以并不是真正隐藏。但大多数库内置方法和语法结构遵循通用约定他们是隐藏的。
@@ -864,12 +891,34 @@ console.log(typeof age.valueOf()); // number // 24  基本的数字类型
 console.log(typeof name.valueOf()); // string  // 'sun' 基本的字符类型
 console.log(typeof age.toString()); // string  // '24' 基本的字符类型
 console.log(typeof name.toString()); // string  // 'sun' 基本的字符类型
+
+//在 ES6 之后，还允许对象通过显式指定 @@toPrimitive Symbol 来覆盖原有的行为
+var o = {
+  valueOf: () => {
+    console.log('valueOf');
+    return {};
+  },
+  toString: () => {
+    console.log('toString');
+    return {};
+  },
+};
+o[Symbol.toPrimitive] = () => {
+  console.log('toPrimitive');
+  return 'hello';
+};
+console.log(o + '');
+// toPrimitive
+// hello
 ```
 
 ## null 和 undefined 的区别
 
 - null 表示"没有对象"，即该处不应该有值
+  - null 是一个关键字 不可以用作变量声明
 - undefined 表示"缺少值"，就是此处应该有一个值，但是还没有定义
+  - undefined 通常用 void 0 表示
+  - undefined 可以被赋为一个 true 值
 
 ## 判断数据类型的几种方法
 

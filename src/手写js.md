@@ -1238,3 +1238,54 @@ arr[Symbol.iterator] = function () {
   };
 };
 ```
+
+## range reserve
+
+```html
+<!--  将 1234 4个节点 变成 4321  -->
+<div id="a">
+  <span>1</span>
+  <p>2</p>
+  <a>3</a>
+  <div>4</div>
+</div>
+
+<script>
+  let element = document.getElementById('a');
+
+  /* 普通解法 */
+  function reverseChildren(element) {
+    let children = Array.prototype.slice.call(element.childNodes);
+    for (let child of children) {
+      element.removeChild(child);
+    }
+
+    children.reverse();
+    for (let child of children) {
+      element.appendChild(child);
+    }
+  }
+  /* 熟悉dom api后的解法 因为 insert一个node的时候 如果这个弄的本身存在dom 会自动remove */
+  function reverseChildren(element) {
+    var l = element.childNodes.length;
+    while (l-- > 0) {
+      element.appendChild(element.childNodes[l]);
+    }
+  }
+
+  /* range 解法 */
+  function reverseChildren(element) {
+    let range = new Range(); // 创建range对象实例
+    range.selectNodeContents(element); // 得到element节点的内容
+
+    let fragment = range.extractContents(); // 拿出range中的内容 并产生一个fragment对象 node api会造成重排 fragment不会 此时fragment是一个空标签集合
+    var l = fragment.childNodes.length;
+    while (l-- > 0) {
+      fragment.appendChild(fragment.childNodes[l]); // 往fragment的空标签中填值
+    }
+    element.appendChild(fragment);
+  }
+
+  reverseChildren(element);
+</script>
+```
