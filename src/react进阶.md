@@ -42,6 +42,10 @@
 
 ![image-20210317231622089](./img/react15生命周期.png)
 
+### react 16 生命周期
+
+![image-20210317231622089](./img/react16生命周期.png)
+
 ### 生命周期背后的设计思想
 
 - render 是组件的灵魂 生命周期是组件的躯干
@@ -49,3 +53,19 @@
 ### 组件生命周期
 
 ![image-20210317231622089](./img/组件生命周期.png)
+
+- componentReceiveProps 并不是由 props 的变化触发的 而是由父组件的更新触发的
+- react 组件会根据 shouldComponentUpdate 的返回值来决定是否执行该方法之后的生命周期，进而决定是否对组件进行 re-renders（重渲染）
+
+### react 的组件为什么要加 key key 不一致时为什么组件会被删除？
+
+### 15->16 生命周期的变化
+
+- 废弃了 componentWillMount 新增了 getDerivedStateFromProps，
+  - getDerivedStateFromProps 不是 componentWillMount 的替代品
+  - getDerivedStateFromProp(props 父组件传进来的,state 子组件自身的） 有且只有一个用途 ： 通过改变 props 派生 更新 state
+  - getDerivedStateFromProp 需要返回一个对象 以供 react 组件更新
+    - 返回的对象针对里面的属性变化做定向更新
+  - componentDidUpdate 为什么非死不可 主要还是挡了 fiber 的路
+  - getSnapshotBeforeUpdate(prevProps,prevState)
+- 15 render 方法必须返回单个元素 而 16 允许我们返回元素数组和字符串
