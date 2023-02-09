@@ -72,7 +72,9 @@
 
 ### Fiber
 
-- Fiber 是 React16 对 React 核心算法的一次重写
+- 丝、纤维等意思 是比线程还要纤细的过程 意在对渲染过程实现更加精细的控制
+- 从架构角度 Fiber 是 React16 对 React 核心算法的一次重写
+- 从编码角度 fiber 是 react 内部所定义的一种数据结构
 - Fiber 会使原本的同步渲染过程 变成异步的
 - Fiber 会讲一个大的更新任务拆解为许多个小任务
 - Fiber 架构的重要特征就是可以被打断的异步渲染模式
@@ -290,3 +292,133 @@ const {Provider, Consumer} = AppContext
   - diff 算法性能突破的关键点在于 `分层对比`
   - 类型一致的节点才有继续 diff 的必要性
   - key 属性的设置 可以帮我们尽可能重用同一层及内的节点
+
+### setState 工作流
+
+- setState -> shouldComponentUpdate -> componentWillUpdate -> render -> componentDidUpdate
+- 在 setTimeout、setInterval 等函数中包括在 dom 原生事件中，它都表现为同步
+- 异步的动机和原理 批量更新的艺术 （nextTick、event loop ）
+  - 每来一个 setState 就把它塞进一个队列里攒起来等时机成熟 再把攒起来等 state 结果做合并 最后只针对最新的 state 值走一次更新流程
+- setTimeout 里的 setState 是同步的原因是 setTimeout 帮助 setState 逃脱了 react 的管控 在 react 管控下的 setState 一定是异步的
+  - 在 reactMount.js 组件初始化的时候调用了 batchedUpdates 因为组件初始化的生命周期里面会使用 setState
+  - 在 reactEventListener.js 事件监听里面也调用了 batchedUpdates 因为事件里面也可能会调用 setState
+  - 在事件执行开始时 isBatchUpdates 直接为 true 也就是锁上了 setState 的执行只能是异步的 而 setTimeout 里面本身是异步的 isBatchUpdates 无法约束 setTimeout 里面的代码 所以 setState 同步执行了
+    ![image-20210317231622089](./img/setState工作流.png)
+
+```js
+// setState
+ReactComponent.protytype.setState = function (partialState, callback) {
+  this.updater.enqueueSetState(this, partialState);
+  if (callback) {
+    this.updater.enqueueCallback(this, callback, 'setState');
+  }
+};
+```
+
+```js
+  // enqueueSetState 将新的state装入状态队列里，使用enqueueUpdate处理即将要更新的组件实例
+  enqueueSetState:function(publicInstance, partialState) {
+  // 根据this拿到对应的组件实例
+  var internalInstance = getInternalInstanceReadyForUpdate(publicInstance,'setState')
+  // 这个 queue 对应的就是一个组件实例的state 数组
+  var queue = internalInstance._pendingStateQueue || (internalInstance._pendingStateQueue = [])
+  queue.push(partialState)
+  // enqueueSetState 用来处理当前的组件实例
+  enqueueUpdate(internalInstance)
+ }
+```
+
+```js
+// enqueueUpdate batchingStrategy react内部专门用来管控批量更新的对象
+function enqueueUpdate(component) {
+  ensureInjected();
+  // 注意这一句是问题的关键，isBatchingUpdates标识着当前是否处于批量创建/更新组件的阶段
+  if (!batchingStrategy.isBatchingUpdates) {
+    // 若当前没有处于批量创建/更新组件的阶段，则立即更新组件
+    batchingStrategy.batchedUpdates(enqueueUpdate, component);
+    return;
+  }
+  // 否则，先把组件塞入 dirtyComponents 队列里，让它“再等等”
+  dirtyComponents.push(component);
+  if (component._updateBatchNumber == null) {
+    component._updateBatchNumber = updateBatchNumber + 1;
+  }
+}
+```
+
+```js
+  // batchingStrategy源码 锁 当锁上时代表此时正在进行批量更新 其他任务都必须进入dirtyComponent里等待 react面对大量状态仍然能够进行有序处理的更新机制
+  var ReactDefaultBatchingStrategy = {
+    // 全局唯一的锁标识
+    isBatchingUpdates:false
+    // 发起更新动作的方法
+    batchedUpdates:function(callback,a,b,c,d,e){
+      // 缓存锁变量
+      var alreadyBatchingStrategy = ReactDefaultBatchingStrategy.isBatchingUpdates
+      // 把锁锁上
+      ReactDefaultBatchingStrategy.isBatchingUpdates = true
+
+      if(alreadyBtachingStrategy) {
+        callback(a,b,c,d,e)
+      } else {
+        // 启动事务， 将callback放进事务里执行
+        transaction.perform(callback,null,a,b,c,d,e)
+      }
+    }
+  }
+```
+
+### transaction（事务） 机制
+
+- 在 react 源码中分布的非常广泛
+- 出现了 initialize、perform、close、closeAll 或者 notifyAll 这样的方法名 很可能就在一个 transaction 机制中
+- transaction 在 react 源码中表现为一个核心类
+- transaction 是创建一个黑盒，该黑盒能够封装任何的方法
+- ![image-20210317231622089](./img/transaction 事务机制.png)
+
+### ReactDefaultBatchingStrategy 批量更新策略事务
+
+- 有两个 wrapper（包装）
+
+```js
+var RESET_BATCHED_UPDATES = {
+  initialize: emptyFunction,
+  close: function () {
+    ReactDefaultBatchingStrategy.isBatchingUpdates = false;
+  },
+};
+var FLUSH_BATCHED_UPDATES = {
+  initialize: emptyFunction,
+  close: ReactUpdates.flushBatchedUpdates.bind(ReactUpdates),
+};
+```
+
+- 在 callback 执行完之后 RESET_BATCHED_UPDATES 将 isBatchingUpdates 设置为 false ， FLUSH_BATCHED_UPDATES 将执行 flushBatchedUpdates 然后里面会循环所有 dirtyComponent，然后逐一执行 updateComponet 执行所有的生命周期方法 实现组件的更新
+
+### 对 react 的定位
+
+- react 是用 js 构建`快速相应`的大型 web 应用程序的首选方式。它在 facebook 和 Instagram 上表现优秀
+
+### Stack Reconciler 到底有着怎样根深蒂固的局限性（卡顿）
+
+- 如果渲染县城和 js 县城同时工作那么渲染的结果将是难以预测的，`js线程和渲染线程必须是互斥的，其中一个线程执行的时候另一个线程只能挂起等待`，具有相似特征的还有事件线程浏览器 eventloop 机制决定了事件任务是由一个异步队列来维持的`当事件被触发时不会立刻执行事件任务，而是由事件线程把它添加到任务队列的末尾，等待js同步代码执行完毕后在空闲的时间里执行出队`
+- 主要问题：js 对朱线程的超时占用问题
+- 栈调和机制下的 diff 算法，其实是树的深度优先遍历的过程 子节点的所有子节点都比较完毕之后在比较兄弟节点 这个过程是同步的 不可以被打算 所以栈调和需要的调和事件会很长 意味着 js 会长时间霸占主线程进而导致 渲染卡顿/卡死、交互长时间无响应等问题
+
+### Fiber 是如何解决问题的
+
+- 丝、纤维等意思 是比线程还要纤细的过程 意在对渲染过程实现更加精细的控制
+- 从架构角度 Fiber 是 React16 对 React 核心算法的一次重写
+- 从编码角度 fiber 是 react 内部所定义的一种数据结构
+- 从工作流角度来看，Fiber 节点保存了组件需要更新的状态和副作用
+- 应用目的：实现`增量渲染`:把一个渲染任务分成多个渲染任务 然后分到多个帧里面进行渲染，目的是为了实现任务的可中断、可恢复，并给不同的任务赋予不同的优先级，最终达成更加丝滑的用户体验
+- 可中断、可恢复、优先级
+  - 15 Reconciler 找不同 -> Renderer 渲染不同
+  - 16 scheduler 调度更新的优先级 -> Reconciler 找不同 -> Renderer 渲染不同
+  - 当任务 A 在执行的之后 进来一个优先级更高的任务 B A 会被中断 开始执行 B 当 B 执行好之后 下次执行任务会重新执行 A 的渲染任务
+
+### Fiber 架构对生命周期的影响
+
+![image-20210317231622089](./img/fiber对生命周期的影响.png)
+
+- render 的工作单元有着不同的优先级 react 可以根据优先级的高低去实现工作单元的打断和恢复
