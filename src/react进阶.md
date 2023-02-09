@@ -422,3 +422,154 @@ var FLUSH_BATCHED_UPDATES = {
 ![image-20210317231622089](./img/fiber对生命周期的影响.png)
 
 - render 的工作单元有着不同的优先级 react 可以根据优先级的高低去实现工作单元的打断和恢复
+
+### ReactDOM.render 调用栈
+
+- ReactDOM.render 的函数体中调用了 legacyRenderSubtreeIntoContainer
+
+```js
+return legacyRenderSubtreeIntoContainer(
+  null,
+  element,
+  container,
+  false,
+  callback,
+);
+```
+
+- ![image-20210317231622089](./img/legacyRenderSubtreeIntoContainer.png)
+- ![image-20210317231622089](./img/legacyRenderSubtreeIntoContainer调用链路.png)
+- fiberRoot 本质你一个 FiberRootNode 对象 包含一个 current 属性
+- current 是 FiberNode 正式 fiber 节点对应的对象类型
+- fiberRoot 是 真实 dom 的节点， rootFiber 作为虚拟 dom 的根节点
+- updateContainer
+  - 请求当前 Fiber 节点的 lane（优先级）
+  - 结合 lane（优先级）创建当前 Fiber 节点的 update 对象并将其入队
+  - scheduleUpdateOnFiber 方法 调度当前节点 rootFiber
+- reactDom.render 发起对首次渲染链路中，这些意义都不大，因为这个渲染过程是同步的 scheduleUpdateOnFiber 里面调用了 perfoemSyncWorkOnRoot 方法
+- perfoemSyncWorkOnRoot 是 render 阶段的起点 render 阶段的任务就是完成 Fiber 树的构建 他是整个渲染链路中最核心的一环
+
+### react 的启动方式
+
+- legacy 模式：`ReactDOM.render(<App />, rootNode)` 同步渲染链路
+  - 仍然是一个深度优先搜索的过程 在这个过程中 beginWork 将创建新的 Fiber 节点
+  - 而 completeWork 则负责将 Fiber 节点映射为 DOM 节点
+- blocking 模式: `ReactDOM.createBlockingRoot(rootNode).render(<App />)`
+- concurrent 模式：`ReactDOM.createRoot(rootNode).render(<App />)` 异步渲染链路
+
+### react 如何知道当前的 lane 优先级
+
+- mode 属性 决定着这个工作流是一气呵成 （同步）的还是分片执行（异步）的
+
+```js
+function requestUpdateLane(fiber) {
+  // 获取 mode 属性
+  var mode = fiber.mode;
+  // 结合 mode 属性判断当前的
+  if ((mode & BlockingMode) === NoMode) {
+    return SyncLane;
+  } else if ((mode & ConcurrentMode) === NoMode) {
+    return getCurrentPriorityLevel() === ImmediatePriority$1
+      ? SyncLane
+      : SyncBatchedLane;
+  }
+
+  // ...
+
+  return lane;
+}
+```
+
+### Fiber 一定是异步渲染吗
+
+- Fiber 架构的设计确实是为了 Concurrent 而存在
+- Fiber 架构在 React 中并不能够和异步渲染画 严格的等号
+- 是一种同时兼容了同步渲染与异步渲染的设计
+
+### workInProgress 节点创建
+
+- performSyncWorkOnRoot -> renderRootSync -> prepareFreshStack 重制一个新的堆栈环境 -> createWorkInProgress -> createFiber 的返回值 是 workInProgress
+- workInProgress 的 alternate 将只想 current
+- current 的 alternate 将反过来指向 workInProgress
+- ![image-20210317231622089](./img/createWorkInProgress.png)
+- createFiber 产生一个 FiberNode 实例 也就是 fiber 节点的对象类型
+- workInProgress 节点其实就是 current 节点（即 rootFiber)的副本
+- fiberRoot 对象（FiberRootNode 实例）-> current -> rootFiber 对象（FiberNode 实例）<—> alternte <-> rootFiber 对象（FiberNode 实例）-> APP（FiberNode 实例）
+- workLoopSync
+  - 通过 while 循环反复判断 worlInProgress 是否为空
+  - 触发对 beginWork 的调用 进而实现对新 Fiber 节点的创建
+
+```js
+function workLoopSync() {
+  // 若 workInProgress不为空
+  while (workInProgress !== null) {
+    // 针对他执行 performUnitOfWork方法
+    performUnitOfWork(workInProgress);
+  }
+}
+```
+
+### 为什么制造 current 树 和 workProgress 树 两棵看起来没区别的 fiber 树
+
+### beginWork
+
+- beginWork 的入参是一对用 alternate 连接起来的 workInProgress 和 current 节点
+- beginWork 的核心逻辑是根据 fiber 节点（workInProgress）的 tag 属性的不同调用不同的节点创建函数
+- `"update+类型名"`的方法很多 但是逻辑都比较相似 通过调用 reconcileChildren 方法 生成当前节点的子节点
+
+```js
+function reconcileChildren(current, workInProgress, nextChildren, renderLanes) {
+  // 判断current 是否为null
+  if (current === null) {
+    // 若current为null， 则进入mountChildrenFibers 的逻辑
+    workInProgress.child = mountChildFibers(
+      workInProgress,
+      null,
+      nextChildren,
+      renderLanes,
+    );
+  } else {
+    // 若current不为null， 则进入reconcileChildFibers的逻辑
+    workInProgress.child = reconcileChildrenFiers(
+      workInProgress,
+      current.child,
+      nextChildren,
+      renderLanes,
+    );
+  }
+}
+```
+
+```js
+var recondileChildFibers = ChildReconciler(true);
+var mountChildFibers = ChildReconciler(false);
+```
+
+### ChildReconciler
+
+- recondileChildFibers 和 mountChildFibers 的不同，在于对副作用的处理不同
+
+```js
+function placeSingleChild(newFiber) {
+  if (shouldTrackSideEffects && newFiber.alternate === null) {
+    newFIber.flags = Placement;
+  }
+  return newFiber;
+}
+```
+
+- 给 fiber 节点打上一个 flags（effectTag）的标记
+- Placement 的意思是需要新增 dom 节点
+- 副作用的定义：数据获取、订阅、或者修改 DOM 等动作
+- ChildReconciler 中定义了大量如 placeXXX、deleteXXX、updateXXX、reconcileXXX 等这样的函数，这些函数覆盖了对 Fiber 节点的创建、增加、删除、修改等动作，将直接或间接地被 reconcileChildFibers 所调用
+- ChildReconnciler 的返回值是一个名为 ireconcileChildFibers 的函数，这个函数是一个逻辑分发起，它将根据入参的不同，执行不同 Fiber 节点操作，最终返回不同的目标 Fiber 节点
+
+### Fiber 节点创建过程
+
+![image-20210317231622089](./img/createWorkInProgress.png)
+
+### Fiber 节点间是如何连接的呢
+
+- child 代表子节点
+- return 代表父节点
+- sibling 代表当前节点的第一个兄弟节点
