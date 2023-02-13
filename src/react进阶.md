@@ -511,6 +511,10 @@ function workLoopSync() {
 
 ### 为什么制造 current 树 和 workProgress 树 两棵看起来没区别的 fiber 树
 
+- 因为一帧里面 fiber 没办法同时处理
+- workProgress 树 代表当前正在 render 中的树
+- current 树 代表已经存在的树
+
 ### beginWork
 
 - beginWork 的入参是一对用 alternate 连接起来的 workInProgress 和 current 节点
@@ -573,3 +577,95 @@ function placeSingleChild(newFiber) {
 - child 代表子节点
 - return 代表父节点
 - sibling 代表当前节点的第一个兄弟节点
+
+### completeWork
+
+- 调用链路：performUnitOfWork -> completeUnitOfWork -> completeWork
+- 内部是三个关键动作
+  - 创建 DOM 节点 createInstance
+  - 将 dom 节点插入到 dom 树 appendAllChildren
+  - 为 dom 节点设置属性 FinalizeInitialChildren
+- completeWork 针对渲染 h1 标签 - hostComponent 也就是原声 dom 类型
+  - getHostContext() 为 dom 节点创建做准备
+  - createInstance() 创建 dom 节点
+  - appendAllChildren() 把创建好的 dom 节点挂载到 dom 树上去
+  - FinalizeInitialChildren 为 dom 节点设置属性
+- complete 的执行是严格自底向上的 子节点的兄弟节点总是先于父节点执行
+
+```js
+function performUnitOfWork(unitOfWork) {
+  // ...
+  // 获取入参节点对应的current节点
+  var current = unitOfWork.alternate;
+
+  var next;
+
+  if (xxx) {
+    //...
+    // 创建当前节点的节点
+    next = beginWork$1(current, unitOfWork, subtreeRenderLanes);
+  }
+  // ...
+
+  if (next === null) {
+    // 调用completeUnitOfWork
+    completeUnitOfWork(unitOfWork);
+  } else {
+    // 将当前节点更新为新创建出的Fiber节点
+    workInProgress = next;
+  }
+  // ...
+}
+```
+
+### completeUnitOfWork
+
+- 开启收集 EffectList（副作用链） 的“大循环”
+- 做了三件事
+  - 针对传入的当前机诶单 调用 completeWork
+  - 将当前节点的副作用链插入到其父节点对应的副作用链中
+  - 以当前节点为起点，循环遍历其兄弟节点及其父节点
+
+### render 阶段的工作目标是什么呢
+
+- 找出界面中需要处理的更新
+
+### EffectList 副作用链
+
+- 价值：让 commit 只负责实现更新，而不负责寻找更新 坐享其成直接拿到 render 阶段的工作成功
+- 副作用链可以理解为`render阶段的工作集合`
+- 数据结构为链表 由 fiber 节点组成
+  - 这些 fiber 节点需要满足两个特性
+    - 都是当前 fiber 节点的后代节点
+    - 都有待处理的副作用
+- fiber 节点的 effectList 代表其子节点所要进行的更新，completeWork 是自底向上执行的 所以 fiberRoot 节点的 effectList 就是本次 render 得出的所有更新
+- 设计与实现
+  - EffectList 在 fiber 节点中是通过 firstEffect 和 lastEffect 来维护的
+  - 为 firstEffect、lastEffect 各赋值一个引用 completedWork（正在被执行 completeWork 相关逻辑的节点）
+- 创建过程
+  - App FiberNode 的 flags（effectTag）属性为 3 大于 performedWork，因此会进入 effectList 的创建逻辑
+  - 创建 effectList 时，并不是为当前 Fiber 节点创建，而是为它的父节点创建 App 节点的父节点是 rootFiber，rootFiber 的 effectList 此时为空
+  - rootFiber 的 firstEffect 和 lastEffect 指针都会指向 App 节点、App 节点由此成为 effectList 中的唯一一个 FiberNode
+
+### commit 阶段
+
+- 会在 performSyncWorkOnRoot 中被调用 commitRoot(root)
+- root 不是 rootFiber 而是 fiberRoot 实例 fiberRoot 的 current 指向 rootFIber 因此可以拿到 effectList
+- 三个阶段
+  - before mutation 阶段
+    - 这个节点 Dom 节点还没有被渲染到界面上去
+    - 过程中会触发 getSnapshotBeforeUpdate 、 useEffect
+  - mutation 负责 dom 节点的渲染 渲染过程中会遍历 effectList 根据 flags 的不同进行不同的 dom 操作
+  - layout 处理 dom 渲染完毕之后的收尾逻辑
+    - componentDidMount、componentDidUpdate、useLayoutEffect
+    - fiberRoot 的 current 指针指向 WorkInProgress Fiber 树
+
+### 函数 名词 测验
+
+- performSyncWorkOnRoot
+- workLoopSync
+- performUnitOfWork
+- beginWork
+- completeWork
+- completeUnitOfWork
+- reconcileChildFibers
