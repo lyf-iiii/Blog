@@ -213,6 +213,28 @@ Object.assign2 = function (target, ...source) {
     }
   });
 };
+function objectAssign(target, ...sources) {
+  if (target == null || target == undefined) {
+    throw Error();
+  }
+  target = Object(target);
+
+  for (let source of sources) {
+    if (source == null) continue;
+    merge(Object.keys(source), source);
+    merge(Object.getOwnPropertySymbols(source), source);
+  }
+
+  function merge(keys = [], source) {
+    for (let key of keys) {
+      target[key] = source[key];
+      if (target[key] !== source[key]) {
+        throw Error();
+      }
+    }
+  }
+  return target;
+}
 ```
 
 ## Object.create()
