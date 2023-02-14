@@ -660,12 +660,27 @@ function performUnitOfWork(unitOfWork) {
     - componentDidMount、componentDidUpdate、useLayoutEffect
     - fiberRoot 的 current 指针指向 WorkInProgress Fiber 树
 
-### 函数 名词 测验
+### 函数 名词 阶段性理解测验
 
 - performSyncWorkOnRoot
+  - performSyncWorkOnRoot 是 render 阶段的起点 render 阶段的任务就是完成 Fiber 树的构建 他是整个渲染链路中最核心的一环
 - workLoopSync
+  - while 循环判断 workInProgress 是否为空， 如果为空 触发对 beignWork 的调用 进而实现对新 fiber 节点的创建
 - performUnitOfWork
+  - workLoopSync 里面如果判断 workInProgress 为空就会执行 performUnitOfWork
+  - performUnitOfWork -> completeUnitOfWork -> completeWork
 - beginWork
+  - 探寻阶段
+  - 核心逻辑是根据 fiber 节点（workInProgress）的 tag 属性的不同调用不同的节点创建函数
+  - 根据 ReactElement 对象创建所有的 fiber 节点 最终构造出 fiber 树形结构（设置 return 和 sibling 指针）
+  - 设置 fiber.flags(二进制形式变量，用来标记 fiber 节点的增删改状态等待 completeWork 阶段处理)
+  - 设置 fiber.stateNode 局部状态 ( 如 Class 类型节点：fiber.stateNode = newClass() )
+  - updateXXX 函数
 - completeWork
+  - 回溯阶段
+  - 给 fiber 节点创建 dom 实例 将 fiber.stateNode 指向这个 dom 实例
+  - 将当前节点的副作用队列 添加到父节点的副作用队列之后 给父节点更新 firstEffect 和 lastEffect 指针
+  - 识别 beginWork 阶段设置的 fiber.flags 判断当前 fiber 是否有副作用如果有将当前 fiber 加到父节点的副作用队列中，等待 commit 阶段处理
 - completeUnitOfWork
-- reconcileChildFibers
+  - 处理 beginWork 阶段已经生成的 fiber 节点
+
