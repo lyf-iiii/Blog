@@ -666,6 +666,7 @@ function performUnitOfWork(unitOfWork) {
   - performSyncWorkOnRoot 是 render 阶段的起点 render 阶段的任务就是完成 Fiber 树的构建 他是整个渲染链路中最核心的一环
 - workLoopSync
   - while 循环判断 workInProgress 是否为空， 如果为空 触发对 beignWork 的调用 进而实现对新 fiber 节点的创建
+  - 循环创建 fiber 节点 构建 fiber 树的过程是由 workLoopSync 完成的
 - performUnitOfWork
   - workLoopSync 里面如果判断 workInProgress 为空就会执行 performUnitOfWork
   - performUnitOfWork -> completeUnitOfWork -> completeWork
@@ -681,6 +682,125 @@ function performUnitOfWork(unitOfWork) {
   - 给 fiber 节点创建 dom 实例 将 fiber.stateNode 指向这个 dom 实例
   - 将当前节点的副作用队列 添加到父节点的副作用队列之后 给父节点更新 firstEffect 和 lastEffect 指针
   - 识别 beginWork 阶段设置的 fiber.flags 判断当前 fiber 是否有副作用如果有将当前 fiber 加到父节点的副作用队列中，等待 commit 阶段处理
+  - `current树与workInProgress树可以对标“双缓冲”模式下的两套缓冲数据：当current树呈现在用户眼前时，所有的更新都会由workInProgress树来承接WorkInProgress树将会在用户看不到的地方（内存里）悄悄的完成所有改变`
 - completeUnitOfWork
   - 处理 beginWork 阶段已经生成的 fiber 节点
 
+### 双缓冲模式
+
+- 主要利好则是能够帮我们较大限度地实现 Fiber 节点的复用，从而减少性能方面的开销
+- 初始化的时候只有 current 第一次更新 生成 workInProgress 树 替换 current 树 第二次更新 全部节点复用
+
+### 更新链路要素拆解
+
+- 挂载可以理解为一种特殊的更新 ReactDOM.render 和 setState、useState 也是一种触发更新的姿势 都会创建 update 对象进入同一种更新工作流
+- update 对象的创建
+  - dispatchAction -> performSyncWorkOnRoot(render 阶段) -> commit 阶段
+  - dispatchAction 里面完成 update 对象的创建
+- 从 update 对象到 scheduleUpdateOnFiber
+  - enqueueUpdate 之前：创建 update
+  - enqueueUpdate 调用：将 update 入队
+  - udatreQueue 的内容会成为 render 阶段计算 Fiber 节点的新 state 的依据
+  - scheduleUpdateOnFiber 调度 update
+- scheduleUpdateOnFiber
+  - markUpdateLaneFromFiberToRoot
+  - 通过 lane === syncLane 判断同步优先级 同步执行 performSyncWorkOnRoot 异步执行 ensureRootIsScheduled
+  - ensureRootIsScheduled
+    - performSyncWorkOnRoot 同步更新的 render 入口 被 scheduleSyncCallback 调用
+    - performConcurrentWorkOnRoot 异步更新的 render 入口 被 scheduleCallback 调用
+    - scheduleSyncCallback、scheduleCallback 都是通过调度 unstable_scheduleCallback 来发起调度的
+
+### fiber 异步渲染的核心特征 -> concurrent 模式
+
+- “事件切片” 与 “优先级调度”
+- 浏览器的刷新频率为 60hz 也就是每 16.6ms 就会刷新一次 超长的 Task 显然会挤占渲染线程的工作时间，引起“掉帧”
+
+### 时间切片是如何实现的？
+
+- 异步渲染模式下 循环创建 fiber 节点 构建 fiber 树的过程是由 workLoopConcurrent 完成的
+
+```js
+function workLoopConcurrent() {
+  // perform work until Scheduler asks us to yield
+  while (workInProgress !== null && !shouldYield()) {
+    performUnitOfWork(workInProgress);
+  }
+}
+```
+
+- 当 shouldYield()调用返回为 true ， 就说明当前需要对主线程进行让出了， 此时 while 循环的判断条件整体为 false， while 循环将不再继续
+
+```js
+// shouldYield = unstable_shouldYield
+exports.unstable_shouldYield = function () {
+  return exports.unstable_now() >= deadline;
+};
+```
+
+- deadline 当前时间切片的倒计事件
+
+```js
+var perfirnWorkUnitDeadline = function () {
+  if (scheduledHostCallback !== null) {
+    var currentTime = exports.unstable_now();
+    deadline = currentTime + yieldInterval;
+    var hasTimeRemaining = true;
+    // ...
+  }
+};
+```
+
+- react 会根据浏览器的帧率计算出时间切片的大小 并结合当前时间 计算出每个切片的倒计时间 workLoopConcurrent 中会调用 shouldYield 来询问当前时间切片是否到期 若已到期则结束循环 让出主线程的控制权
+
+### 优先级调度是如何实现的
+
+- 通过 unstable_scheduleCallback 来发起调度的
+- 结合任务的优先级信息为其执行不同的调度逻辑
+- unstable_scheduleCallback 的主要工作 针对当前任务创建一个 task 然后结合 startTime 信息 将这个 task 推入 timerQueue 或 taskQueue， 最后根据 timerQueue 或 taskQueue 的执行情况 执行 延时任务或即时任务
+  - startTime 任务的开始时间
+  - expirationTime 越小任务的优先级就越高
+  - timerQueue 一个以 startTime 为排序依据的小顶堆，它存储的是 startTime 大于当前时间（也就是待执行的任务）的任务
+  - taskQueue 一个以 expirationTime 为排序依据的小顶堆 它存储的是 startTime 小于当前时间（也就是已过期）的任务
+- 小顶堆
+  - 对一颗完全二叉树来说 它每个结点的结点值都不大于其左右孩子的结点值 这样的完全二叉树就叫小顶堆
+  - 无论我们怎么删除小顶堆的元素 其根节点一定是所有元素中值最小的一个节点
+- 小顶堆的堆顶任务一定是整个 timerQueue 堆结构里 startTime 最小的任务 也就是需要最早被执行的未过期任务 那么 unstable_scheduleCallback 会通过 requestHostTimeout 对当前任务发起一个延时调用（handleTimeout） 并不会直接调度执行当前任务
+- flushWork 中将调用 workLoop workLoop 会逐一执行 taskQueue 中的任务 直到调度过程被暂停（时间片用尽）或任务全部被清空
+- react 发起 task 调度的姿势有两个 setTimeout messageChannel，requestHostCallback 发起的“即时任务”最早也要等到下一次时间循环才能够执行
+- ![image-20210317231622089](./img/unstable_scheduleCallback工作流.png)
+
+### 回顾原生 DOM 下都事件流
+
+- 一个页面往往会被绑定许许多多的事件而页面接收事件的顺序就是事件流
+- 一个时间传播过程要经过以下三个阶段
+  - 事件捕获阶段
+  - 目标阶段
+  - 事件冒泡阶段
+- 事件委托：把多个子元素的同一类型的监听逻辑 合并到父元素上通过一个监听函数来管理的行为
+
+### react 事件流
+
+- 当事件在具体的 DOM 节点上被触发后最终都会冒泡到 document 上，document 上所绑定的统一事件处理程序会将事件分发到具体的组件实例，在分发事件之前 react 首先会对事件进行包装，把原生 dom 事件包装成合成事件
+- react 合成事件
+  - 在底层哦平了不同浏览器的差异
+  - 在上层向开发者暴露统一的、稳定的、与 DOM 原生事件相同的事件接口
+  - e.nativeEvent 可以获取到原生事件
+- 事件绑定
+  - 在挂在阶段完成 completeWork 在给 dom 节点设置属性的时候
+  - ![image-20210317231622089](./img/completeWork事件绑定过程.png)
+  - legacyListenToTopLevelEvent 会判断已经注册过的事件执行跳过，即便我们在 react 项目中多次调用了对同一个事件的监听，也只会在 document 上触发一次注册
+  - 为什么针对同一个事件，即便可能会存在多个回调 document 也只需要注册一次监听？因为 react 最终注册到 document 上的并不是某一个 dom 节点上对应的具体回调逻辑而是一个统一的事件分发函数
+- 事件触发
+  - 本质 是对 dispatchEvent 函数的调用
+  - ![image-20210317231622089](./img/事件触发过程.png)
+- traverseTwoPhase 里面是事件收集过程
+  - 循环收集 tag === HostComponent 的节点 进入 path 数组 因为浏览器只认识 DOM 节点，浏览器事件也只会在 DOM 节点之间传播 path 数组中子节点在前，祖先节点在后
+  - 模拟事件在捕获阶段的传播顺序，收集捕获阶段相关的节点实例与回调函数 从后往前遍历 path 数组 模拟事件的捕获顺序 其实就是从父节点往下遍历子节点 直至遍历到目标节点的过程 这个遍历顺序和事件在捕获阶段的传播顺序是一致的 实例收集进 \_dispatchInstances 回调收集进\_dispatchListeners
+  - 模拟事件在冒泡阶段的传播顺序，收集冒泡阶段相关的节点实例与回调函数 traverseTwoPhase 会从后往前遍历 path 数组 模拟事件的冒泡顺序 收集事件在捕获阶段对应的回调与实例 实例收集进 \_dispatchInstances 回调收集进\_dispatchListeners
+
+### React 事件系统的设计动机是什么
+
+- 在底层抹平了不同浏览器的差异 在上层面向开发者暴露 统一的、稳定的、与 DOM 原生事件相同的事件接口
+- react 自研事件系统使 react 牢牢把握住了事件处理的主动权
+- react 的事件系统虽然基于事件委托但是无法从性能入手解释设计动机
+- 事件委托的主要作用应该是帮助 react 实现了对所有事件的中心化管控
