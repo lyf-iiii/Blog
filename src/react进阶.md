@@ -834,3 +834,96 @@ var perfirnWorkUnitDeadline = function () {
 - ![image-20210317231622089](./img/createStore2.png)
 - ![image-20210317231622089](./img/createStore3.png)
 - ![image-20210317231622089](./img/createStore.png)
+
+### dispatch
+
+- redux 首先会将 isDispatching 变量置为 true 待 reducer 执行完毕后 再将 isDispatching 变量置为 false
+- 用 isDispatching 将 dispatch 的过程锁起来是为了避免开发者在 reducer 中手动调用 dispatch
+
+### subscrible 如何与 redux 主流程相结合
+
+- store 对象创建成功后 通过调用 store.subscribe 来注册监听函数 当 dispatch action 发生时 redux 会在 reducer 执行完毕后 将 listeners 数组中的舰艇函数逐个执行
+
+### 为什么有 nextListeners 和 currentListeners
+
+- 因为 nextListeners 在执行过程中有可能发生变化 但是 for 循环不会感知 会导致元素的索引发生变化 导致函数错误 因此为了保证 for 循环的稳定性 将原始的 nextListeners 保存成不可变 currentListeners
+
+### 中间件的工作模式
+
+- 中间件的引入 会为 redux 工作流带来什么样的改变呢
+  - redux-thunk 中间件 实现 redux 引入异步数据流
+- action -> middleware -> dispatch -> reducer -> nextState
+- 执行时机 action 被分发之后、reducer 触发之前
+- 执行前提 即 applyMiddleware 将会对 dispatch 函数进行改写 使得 dispatch 在触发 reducer 之间 会首先执行对 redux 中间件的链式调用
+
+### thunk 中间件到底做了什么
+
+```js
+// createThunkMiddleware 用于创建thunk
+function createThunkMiddleware(extraArgument) {
+  // 返回值是一个 thunk 它是一个函数
+  return ({ dispatch, getState }) =>
+    (next) =>
+    (action) => {
+      // thunk 若感知到action是一个函数，就会执行action
+      if (typeof action === 'function') {
+        return action(dispatch, getState, extraArgument);
+      }
+      // 若 action不是一个函数 则不处理 直接放过
+      return next(action);
+    };
+}
+
+const thunk = createThunkMiddleware();
+thunk.withExtraArgument = createThunkMiddleware;
+
+export default thunk;
+```
+
+### applyMiddleware
+
+- applyMiddleware 是 enhancer 的一种 而 enhancer 的意思是“增强器” 它增强的正式 createStore 的能力
+- applyMiddleware 是如何与 createStore 配合工作的
+  - applyMiddleware 返回一个接收 createStore 为入参的函数 这个函数将会作为参数传给 createStore createStore 发现 enhancer 之后会对 echancer 进行调用
+- dispatch 函数是如何被改写的
+  - redux 中间件都是高阶函数 会返回一个接收另一个函数为参数的函数 因此有内层函数 和外层函数
+  - 外层函数主要作用是获取 dispatch 、getState 这两个 API 而真正的中间件逻辑是在内层函数中包裹的
+  - 待 middlewares.map(middleware => middleware(middlewareAPI))执行完毕后 内层函数会被悉数提取至 chain 数组 最后通过 compose 进行函数合成
+
+```js
+  // compose 会首先利用 ‘...’ 运算符将入参手链为数据格式
+  export default function compose(...funcs) {
+    // 处理数组为空的边界情况
+    if(funcs.length === 0) {
+      return arg => arg
+    }
+
+    // 若只有一个函数，也就谈不上组合， 直接返回
+    if(funcs.length === 1) {
+      reurn funcs[0]
+    }
+
+    // 若有多个函数，那么调用reduce方法来实现函数的组合
+    return funcs.reduce((a,b) => (...args) => a(b(..args)))
+  }
+```
+
+### 中间件与面向切面编程
+
+- AOP（面向切面）的存在 恰恰是为了 解决 OOP（面向对象）的局限性
+- 面向切面思想在很大程度上 提升了我们组织逻辑的灵活度与干净度 帮助我们规避掉了逻辑冗余、逻辑耦合这类问题
+
+### 性能优化
+
+- 使用 shouldComponentUpdate 规避冗余的更新逻辑
+  - 只要父组件发生了更新 那么所有的子组件都会被无条件更新
+  - 组件自身调用 setState 无论 state 是否真正发生了变化都会去走一遍更新流程
+- PureComponent + Immutable.js
+  - PureComponent 将会在使用 shouldComponentUpdate 中对组件更新前后的 props 和 state 进行`浅比较`并根据浅比较多结果 决定是否需要继续更新流程
+  - 问题 1 若数据没变 但是引用变了 浅比较仍然会认为数据发生了变化 进而触发一次不必要的更新 导致过度渲染
+  - 问题 2 若数据内容变了 但是引用没变 那么浅比较则会认为数据没有发生变化 进而阻断一次更新导致不渲染
+  - immutable 让引用的变化和值的变化产生必然的关系 可以解决上述两个问题
+  - 打造结合 PureComponent、Immutable 的公共类 改写 setState 达到目的
+- React.memo 与 useMemo
+  - React.memo 是一个高阶函数 第一个参数接收目标函数 第二个参数 不传默认浅比较 传了将作为是否 rerender 的执行逻辑
+  - 如果希望复用的是组件的某一个 或 某几个部分 这种更加精细化的管控 使用 useMemo
