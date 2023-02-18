@@ -1311,3 +1311,35 @@ arr[Symbol.iterator] = function () {
   reverseChildren(element);
 </script>
 ```
+
+## babel 插件 如何实现 jsx 到 js 到编译
+
+```js
+module.exports = function (babel) {
+  var t = babel.types;
+  return {
+    name: 'custom-jsx-plugin',
+    visitor: {
+      JSXElement(path) {
+        var openingElement = path.node.openingElement;
+        var tagName = openingElement.name.name;
+        var args = [];
+        args.push(t.stringLiteral(tagName));
+        var attribs = t.nullLiteral();
+        args.push(attribs);
+        var reactidentifier = t.identifier('React');
+        var createElementIdentifier = t.identifier('createElement');
+        var callee = t.memberExpression(
+          reactidentifier,
+          createElementIdentifier,
+        );
+        var callExpression = t.callExpression(callee, args);
+        callExpression.arguments = callExpression.arguments.concat(
+          path.node.children,
+        );
+        path.replaceWith(vallExpression, path.node);
+      },
+    },
+  };
+};
+```
