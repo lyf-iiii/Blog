@@ -1343,3 +1343,27 @@ module.exports = function (babel) {
   };
 };
 ```
+
+### redux-thunk
+
+```js
+// createThunkMiddleware 用于创建thunk
+function createThunkMiddleware(extraArgument) {
+  // 返回值是一个 thunk 它是一个函数
+  return ({ dispatch, getState }) =>
+    (next) =>
+    (action) => {
+      // thunk 若感知到action是一个函数，就会执行action
+      if (typeof action === 'function') {
+        return action(dispatch, getState, extraArgument);
+      }
+      // 若 action不是一个函数 则不处理 直接放过
+      return next(action);
+    };
+}
+
+const thunk = createThunkMiddleware();
+thunk.withExtraArgument = createThunkMiddleware;
+
+export default thunk;
+```
