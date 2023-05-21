@@ -1,5 +1,198 @@
 # 手写 Js 练习
 
+## Event Emiter
+
+```js
+class EventEmitter {
+  constructor() {
+    this.eventMap = {};
+  }
+  on(type, handler) {
+    if (!handler instanceof Function) {
+      throw new Error();
+    }
+    if (!this.eventMap[type]) {
+      this.eventMap[type] = [];
+    }
+    this.eventMap[type].push(handler);
+  }
+  emit(type, params) {
+    if (this.eventMap[type]) {
+      this.eventMap[type].forEach((handler) => {
+        handler(params);
+      });
+    }
+  }
+  on(type, handler) {
+    if (this.eventMap[type]) {
+      this.eventMap[type].splice(
+        this.eventMap[type].indexOf(handler) >>> 0,
+        11,
+      );
+    }
+  }
+}
+```
+
+## babel 编译 jsx
+
+```js
+module.exports = function (babel) {
+  var t = babel.types;
+  return {
+    name: 'custom-jsx-plugin',
+    visitor: {
+      JSXElement(path) {
+        var openingElement = path.node.openingElement;
+        var tagName = openingElement.name.name;
+        var args = [];
+        args.push(t.stringLiteral(tagName));
+        var attribs = t.nullLiteral();
+        args.push(attribs);
+        var reactidentifier = t.identifier('React');
+        var createElementIdentifier = t.identifier('createElement');
+        var callee = t.memberExpression(
+          reactidentifier,
+          createElementIdentifier,
+        );
+        var callExpression = t.callExpression(callee, args);
+        callExpression.arguments = callExpression.arguments.concat(
+          path.node.children,
+        );
+        path.replaceWith(vallExpression, path.node);
+      },
+    },
+  };
+};
+```
+
+### redux-thunk
+
+```js
+// createThunkMiddleware 用于创建thunk
+function createThunkMiddleware(extraArgument) {
+  // 返回值是一个 thunk 它是一个函数
+  return ({ dispatch, getState }) =>
+    (next) =>
+    (action) => {
+      // thunk 若感知到action是一个函数，就会执行action
+      if (typeof action === 'function') {
+        return action(dispatch, getState, extraArgument);
+      }
+      // 若 action不是一个函数 则不处理 直接放过
+      return next(action);
+    };
+}
+
+const thunk = createThunkMiddleware();
+thunk.withExtraArgument = createThunkMiddleware;
+
+export default thunk;
+```
+
+## 二分查找
+
+```js
+function search(arr, key) {
+  let start = 0,
+    end = arr.length - 1;
+  while (start <= end) {
+    let mid = parseInt((start + end) / 2);
+    if (key === arr[mid]) {
+      return mid;
+    } else if (key > arr[mid]) {
+      start = mid + 1;
+    } else {
+      end = mid - 1;
+    }
+  }
+  return false;
+}
+var arr = [0, 13, 21, 35, 46, 52, 68, 77, 89, 94];
+console.log(search(arr, 68)); //6
+```
+
+## LRU
+
+```js
+// 第一步构造函数
+class LRUCache {
+  constructor(n) {
+    this.size = n; // 初始化最大缓存数据条数n
+    this.data = new Map(); // 初始化缓存空间map
+  }
+  /*  第二步 接下来是put方法，put方法要处理3个逻辑：
+
+      1、如果待写入的域名，已存在于内存之中，直接更新数据并移动到末尾； 
+      2、如果当前未达到缓存数量上限，直接写入新数据； 
+      3、如果当前已经达到缓存数量上限， 要先删除最不经常使用的数据，再写入数据；
+
+      其他都可以直接操作，移动到末尾这个行为，可以拆成"先删除该数据，再从末尾重新插入一条该数据"，这样就简单多了。所以我们继续更新代码：
+  */
+  put(domain, info) {
+    if (this.data.has(domain)) {
+      this.data.delete(domain);
+      this.data.set(domain, info);
+      return;
+    }
+    if (this.data.size >= this.size) {
+      const firstKey = this.data.keys().next().value;
+      this.data.delete(firstKey);
+    }
+    this.data.set(domain, info);
+  }
+  /* 第三步 接着就只剩下get方法了，get方法同样也要处理2种逻辑：
+
+      1、根据给定的key，查找是否有对应的信息，若不存在则返回false； 
+      2、若第一步结果存在，则把被访问数据移动到末尾； 
+  */
+  get(domain) {
+    if (!this.data.has(domain)) return false;
+    const info = this.data.get(domain);
+    this.data.delete(domain);
+    this.data.set(domain, info);
+    return info;
+  }
+}
+```
+
+## 使用 Promise 实现每隔 1 秒输出 1,2,3
+
+```js
+let arr = [1, 2, 3];
+
+arr.reduce((p, c) => {
+  return p.then(() => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(console.log(c));
+      }, 1000);
+    });
+  });
+}, Promise.resolve());
+```
+
+## 数字实现千分位分割
+
+```js
+const num = 123456789;
+function localString(num) {
+  let str = num + '',
+    count = 0,
+    result = '';
+  for (let i = str.length - 1; i >= 0; i--) {
+    count++;
+    result = str[i] + result;
+    if (count % 3 == 0 && i != 0) {
+      result = ',' + result;
+    }
+    console.log(result);
+  }
+  return result;
+}
+localString(num);
+```
+
 ## Proxy 表单验证
 
 ```js
@@ -306,19 +499,20 @@ console.log(person1);
 
 ```js
 // 1.深拷贝
-function deepClone(obj) {
-  var cloneObj = new obj.constructor();
-  // var cloneObj = {}
+function deepClone(obj, hash = new WeakMap()) {
+  if (obj === null) return;
   if (obj instanceof Date) return new Date(obj);
   if (obj instanceof RegExp) return new RegExp(obj);
-  if (typeof obj !== 'object' || obj === null) return obj;
-  for (var i in obj) {
-    if (obj.hasOwnProperty(i)) {
-      closeObj[i] = deepClone(obj[i]);
-    }
+  if (typeof obj !== 'object') return obj;
+  if (hash.get(obj)) return hash.get(obj);
+  const cloneObj = new obj.contrustor();
+  hash.set(obj, cloneObj);
+  for (let key in obj) {
+    cloneObj[key] = deepClone(obj[key], hash);
   }
   return cloneObj;
 }
+
 // 2.深拷贝
 var person1 = JSON.parse(JSON.stringify(person));
 // 缺点 不能拷贝 正则 function函数
@@ -1344,26 +1538,41 @@ module.exports = function (babel) {
 };
 ```
 
-### redux-thunk
+## 高级运算符加括号
 
 ```js
-// createThunkMiddleware 用于创建thunk
-function createThunkMiddleware(extraArgument) {
-  // 返回值是一个 thunk 它是一个函数
-  return ({ dispatch, getState }) =>
-    (next) =>
-    (action) => {
-      // thunk 若感知到action是一个函数，就会执行action
-      if (typeof action === 'function') {
-        return action(dispatch, getState, extraArgument);
+function machining(expression) {
+  const strArr = [];
+  const low = ['+', '-'];
+  const high = ['*', '/'];
+  const isLow = (str) => low.includes(str);
+  const isHigh = (str) => high.includes(str);
+  let isHighArea = false;
+  let curNum = '';
+
+  for (let i = 0; i < expression.length; i++) {
+    if (isHigh(expression[i])) {
+      if (!isHighArea) {
+        curNum = '(' + curNum;
+        isHighArea = true;
       }
-      // 若 action不是一个函数 则不处理 直接放过
-      return next(action);
-    };
+      curNum += expression[i];
+    } else if (isLow(expression[i])) {
+      if (isHighArea) {
+        curNum = curNum + ')';
+        isHighArea = false;
+      }
+      strArr.push(curNum);
+      strArr.push(expression[i]);
+      curNum = '';
+    } else {
+      curNum += expression[i];
+    }
+  }
+
+  strArr.push(isHighArea ? curNum + ')' : curNum);
+
+  return strArr.join('');
 }
-
-const thunk = createThunkMiddleware();
-thunk.withExtraArgument = createThunkMiddleware;
-
-export default thunk;
+console.log(machining('1+2*3-4/5*6+7*8'));
 ```

@@ -1,9 +1,3 @@
-# myapp
+## 语雀
 
-## install
-
-- pnpm i
-
-## run
-
-- npx dumi dev
+- [学习记录](https://www.yuque.com/g/lianyafeng/lpayot/collaborator/join?token=J7JcPGAj2u3nWftO#)

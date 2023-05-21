@@ -968,8 +968,6 @@ export default thunk;
 - useSyncExternalStore 是一个为第三方库编写提供的新 hook，主要用于支持 React 18 在 concurrent rendering 下与第三方 store 的数据同步问题。
 - useInsertionEffect 主要用于提高第三方 CSS in JS 库渲染过程中样式注入的性能
 
-### useReducer
-
 ## react 面试整理
 
 ### 谈一谈你对 React 的理解

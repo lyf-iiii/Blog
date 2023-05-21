@@ -241,20 +241,8 @@ console.log(str);
 
 -
 
-## react-travel
-
-### 技术栈
-
-- axios
-- react、react-router-dom
-- ts
-- antd
-- redux、redux-tookit、redux-persist
-
-### 模块
-
 - 首页
 
-### koa、koa2、express
+### docker
 
 ![image-20210317131945829](./img/docker-mingling.png)
