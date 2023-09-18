@@ -59,10 +59,10 @@ window.onload = function () {
 
 ## 原型/构造函数/实例
 
-- 原型（`prototype`）：一个简单的对象，用于实现对象的**属性继承**。可以简单的理解成对象的爹。在 Firefox 和 Chrome 中，每个`JavaScript`对象中都包含一个`__proto__`(非标准)的属性指向它爹（该对象的原型），可用 `obj.__proto__`进行访问。
+- 原型（`prototype`）：一个简单的对象，用于实现对象的**属性继承**。可以简单的理解成对象的爹。在 Firefox 和 Chrome 中，每个`JavaScript`对象中都可以使用`Object.getPrototypeOf()`获取它爹（该对象的原型）。
 - 构造函数：可以通过 new 来**新建一个对象**的函数。
-- 实例：通过构造函数和`new`创建出来的对象，便是实例。**实例通过**`__proto__`**指向原型，通过**`constructor`**指向构造函数**
-- Object.prototype.**proto** === null
+- 实例：通过构造函数和`new`创建出来的对象，便是实例。**实例通过**`Object.getPrototypeOf()`**指向原型，通过**`constructor`**指向构造函数**
+- Object.getPrototypeOf(Object.prototype) === null
 
 ## 原型链
 
